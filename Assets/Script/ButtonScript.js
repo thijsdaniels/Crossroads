@@ -1,7 +1,7 @@
 #pragma strict
 
-var Pushed: boolean = false;
-var Subjects: GameObject[];
+var activated: boolean = false;
+var subjects: GameObject[];
 
 function Start() {
 	
@@ -11,21 +11,29 @@ function Update() {
 
 }
 
-function OnPush() {
-	if (!Pushed) {
-		Animate();
+function IsActivated(): boolean {
+	return activated;
+}
+
+function SetActivated() {
+	activated = true;
+}
+
+function Activate() {
+	if (!IsActivated()) {
+		Push();
 		Effect();
-		Pushed = true;
+		SetActivated();
 	}
 }
 
-function Animate() {
+function Push() {
 	transform.position.y -= transform.localScale.y / 4;
 	transform.localScale.y /= 4;
 }
 
 function Effect() {
-	for (var i = 0; i < Subjects.Length; i++) {
-		Subjects[i].SetActive(true);
+	for (var i = 0; i < subjects.Length; i++) {
+		subjects[i].SetActive(true);
 	}
 }

@@ -1,47 +1,103 @@
 #pragma strict
 
-// globals
-private var Listening: boolean = true;
-var maxSpeed: float = 7;
-var JumpSpeed: float = 10;
-var RotationSpeed: int = 15; // [NB] must equally divide 90 degrees
-private var VerticalBounds: float;
-private var Crossroads: Collider = null;
-private var TrackAlongX: boolean;
-private var TrackPosition: float;
-private var TrackAdjuster: Collider = null;
-private var nearbyClimbables: int = 0;
-var climbSpeed: float = 5;
-private var isClimbing: boolean = false;
+/***********/
+/* GLOBALS */
+/***********/
+
+// states
+private var listening: boolean = true;
+private var climbing: boolean = false;
+
+// state modifiers
+private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
+
+// speeds
+public var maxSpeed: float = 7.5;
+public var jumpSpeed: float = 7.5;
+public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
+public var climbSpeed: float = 5;
+public var throwSpeed: float = 10;
+public var accelerationSpeed: float = 40;
+
+// mechanics
+private var verticalBounds: float;
+private var crossroads: Collider = null;
+private var trackAxis: int;
+private var trackPosition: float;
+private var trackAdjuster: Collider = null;
 private var groundedMargin: float = 0.1;
-var bomb: Rigidbody;
-var bombCooldown: float = 1;
-private var slotB: Rigidbody;
-private var cooldownB: float = 0;
+
+// item slots
+private var primaryItem: Rigidbody;
+private var secondaryItem: Rigidbody;
+
+// carrying and throwing
 private var carrying: Rigidbody;
-private var throwCharge: float = 0;
+private var throwAngle: float = 135;
+private var minThrowCharge: float = 0.2;
+private var throwCharge: float = minThrowCharge;
 private var throwChargeDuration = 1;
-private var throwSpeed = 10;
+
+// items
+public var bomb: Rigidbody;
 
 // audio
-var Whoosh: AudioClip;
+public var vocalTrack: AudioSource;
+public var cameraTrack: AudioSource;
+public var cameraSwoop: AudioClip;
+public var playerJump: AudioClip;
+public var playerThrow: AudioClip;
 
-// constructor
-function Awake() {
+
+/*************/
+/* CONSTANTS */
+/*************/
+
+// direction constants
+private static var NORTH = 0;
+private static var EAST = 1;
+private static var SOUTH = 2;
+private static var WEST = 3;
+private static var X_AXIS = 0;
+private static var Z_AXIS = 1;
+private static var CLOCKWISE = -1;
+private static var COUNTERCLOCKWISE = 1;
+
+// controller constants
+private static var BUTTON_JUMP = 'A';
+private static var BUTTON_RUN = 'Left Stick Button';
+private static var BUTTON_ITEM_PRIMARY = 'X';
+private static var BUTTON_ITEM_SECONDARY = 'Y';
+private static var BUTTON_CONTEXT = 'B';
+private static var AXIS_WALK = 'Left Stick Horizontal';
+private static var AXIS_AIM = 'Left Stick Vertical';
+private static var AXIS_CLIMB = 'Left Stick Vertical';
+private static var AXIS_TURN = 'Right Stick Horizontal';
+private static var BUTTON_TURN_RIGHT = 'Right Button';
+private static var BUTTON_TURN_LEFT = 'Left Button';
+private static var AXIS_CAMERA = 'Right Stick Vertical';
+private static var BUTTON_MENU = 'Start';
+private static var BUTTON_INVENTORY = 'Back';
+
+
+/***************/
+/* CONSTRUCTOR */
+/***************/
+
+function Start() {
 	
 	// get distance to ground for use in raycasting
-	VerticalBounds = collider.bounds.extents.y;
+	verticalBounds = this.collider.bounds.extents.y;
 	
 	// get axis and position of the current track for use in locking position components
-	TrackAlongX = GetAxis(transform);
-	TrackPosition = GetTrackPosition();
+	SetTrack();
 	
-	// initialize item slots
-	slotB = bomb;
+	//DEBUG set the primary item for lack of a method to do so
+	primaryItem = bomb;
 	
 }
 
-// looper
+/* LOOPER */
 function FixedUpdate() {
 	
 	// get player input
@@ -50,201 +106,180 @@ function FixedUpdate() {
 	// keep player on track
 	Align();
 	
-	// progress cooldowns
-	CoolDown();
-	
 	// drag along carried object
 	Carry();
 	
 }
 
-/* ================== *
- * DEALING WITH INPUT *
- * ================== */
+
+/**********************/
+/* DEALING WITH INPUT */
+/**********************/
+
+// makes the player start listening
+function StartListening() {
+	listening = true;
+}
+
+// makes the player stop listening
+function StopListening() {
+	listening = false;
+}
 
 // respond to input
 function CheckInput() {
 	
 	// player movement
-	if (Listening) {
-		if (Input.GetAxis('Left Stick Horizontal')) {
-			Move(Input.GetAxis('Left Stick Horizontal'));
+	if (IsListening()) {
+		if (Input.GetAxis(AXIS_WALK)) {
+			Move(Input.GetAxis(AXIS_WALK));
 		}
-		if (Input.GetButtonDown('A')) {
+		if (Input.GetAxis(AXIS_CLIMB)) {
+			Climb(Input.GetAxis(AXIS_CLIMB));
+		}
+		if (Input.GetAxis(AXIS_AIM)) {
+			Aim(Input.GetAxis(AXIS_AIM));
+		}
+		if (Input.GetButtonDown(BUTTON_JUMP)) {
 			Jump();
 		}
-		if (Input.GetButtonDown('B')) {
-			if (cooldownB <= 0) {
-				Use(slotB);
-				//TODO deal with cooldowns in the appropriate place
-				cooldownB = bombCooldown;
-			}
+		if (Input.GetButtonDown(BUTTON_ITEM_PRIMARY)) {
+			ItemPress(primaryItem);
 		}
-		if (Input.GetButton('X')) {
-			ChargeThrow();
+		if (Input.GetButton(BUTTON_ITEM_PRIMARY)) {
+			ItemHold(primaryItem);
 		}
-		if (Input.GetButtonUp('X')) {
-			Throw();
+		if (Input.GetButtonUp(BUTTON_ITEM_PRIMARY)) {
+			ItemRelease(primaryItem);
 		}
-		if (Input.GetButtonDown('Right Button')) {
-			Turn(true);
+		if (Input.GetButtonDown(BUTTON_ITEM_SECONDARY)) {
+			ItemPress(secondaryItem);
 		}
-		if (Input.GetButtonDown('Left Button')) {
-			Turn(false);
+		if (Input.GetButton(BUTTON_ITEM_SECONDARY)) {
+			ItemHold(secondaryItem);
 		}
-		if (Input.GetAxis('Left Stick Vertical')) {
-			if (nearbyClimbables > 0) {
-				isClimbing = true;
-				rigidbody.useGravity = false;
-				transform.Translate(Vector3(0, Input.GetAxis('Left Stick Vertical') * climbSpeed * Time.deltaTime, 0));
-			}
+		if (Input.GetButtonUp(BUTTON_ITEM_SECONDARY)) {
+			ItemRelease(secondaryItem);
+		}
+		if (Input.GetButtonDown(BUTTON_TURN_RIGHT)) {
+			Turn(CLOCKWISE);
+		}
+		if (Input.GetButtonDown(BUTTON_TURN_LEFT)) {
+			Turn(COUNTERCLOCKWISE);
 		}
 	}
 	
 	// game status
-	if (Input.GetButtonDown('Start')) {
+	if (Input.GetButtonDown(BUTTON_MENU)) {
 		Application.Quit();
 	}
 }
 
-/* =============================== *
- * GROUNDING, MOVEMENT AND JUMPING *
- * =============================== */
+
+/******************/
+/* BASIC MOVEMENT */
+/******************/
+
+// returns whether the player can currently be controlled
+function IsListening(): boolean {
+	return listening;
+}
 
 // returns true if a raycast to the 'feet' of the player did not hit anything
-// [BUG] use capsulecast for more accuracy and add a layermask to ignore trigger objects
+//BUG use capsulecast for more accuracy and add a layermask to ignore trigger objects
 function IsGrounded(): boolean {
-	return Physics.Raycast(transform.position, Vector3.down, VerticalBounds + groundedMargin);
+	return Physics.Raycast(transform.position, Vector3.down, verticalBounds + groundedMargin);
 }
 
 // returns whether the player is holding the run button
 function IsRunning(): boolean {
-	return Input.GetButton('X');
+	return Input.GetButton(BUTTON_RUN);
 }
 
 // moves the player horizontally
 function Move(movement: float) {
-	//TODO they way it works now, when you just release the run button while running,
-	// 'braking' by pressing the opposite direction won't work until the velocity has
-	// reduced to less than the maximum. Instead of doing this, separate left and right
-	// velocity and set a 'minimum' (negative maximum) on the left direction. this way
- 	// you can still brake.
-	var running: float = IsRunning() ? 1.5 : 1;
-	var grounded: float = IsGrounded() ? 1 : 0.75;
-	var acceleration =  movement * Time.deltaTime * 40 * grounded * Mathf.Max(0, 1 - rigidbody.velocity.magnitude / (maxSpeed * running));
+	//TODO the way it works now, when you just release the run button while running, 'braking' by pressing the opposite direction won't work until the velocity has reduced to less than the maximum. Instead of doing this, separate left and right velocity and set a 'minimum' (negative maximum) on the left direction. this way you can still brake.
+	var runningFactor: float = IsRunning() ? 1.5 : 1;
+	var groundedFactor: float = IsGrounded() ? 1 : 0.75;
+	var acceleration =  movement * Time.deltaTime * accelerationSpeed * groundedFactor * Mathf.Max(0, 1 - rigidbody.velocity.magnitude / (maxSpeed * runningFactor));
 	rigidbody.velocity += transform.forward * acceleration;
 }
 
 // makes the player jump if it is on the ground
 function Jump() {
 	if (IsGrounded()) {
-		rigidbody.velocity.y = JumpSpeed;
+		rigidbody.velocity.y += jumpSpeed;
+		vocalTrack.PlayOneShot(playerJump);
 	}
 }
 
-/* ============================ *
- * TURNING AND STAYING ON TRACK *
- * ============================ */
 
-// returns true if a transform is facing the x axis (in either direction)
-function GetAxis(trans: Transform): boolean {
-	var direction = GetDirection(trans);
-	return (direction == 0 || direction == 2) ? false : true;
+/************
+ * CLIMBING *
+ ************/
+
+// returns whther or not the player is near something that is climbable
+function CanClimb(): boolean {
+	return nearbyClimbables > 0;
 }
 
-// returns the wind-direction the provided transform is facing
-// 0 = N, 1 = E, 2 = S, 3 = W, -1 = somewhere in between directions
-function GetDirection(trans: Transform): int {
-	var threshold = 0.001;
-	if (Mathf.Abs(trans.localEulerAngles.y - 0) < threshold) return 0;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 90) < threshold) return 1;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 180) < threshold) return 2;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 270) < threshold) return 3;
-	else return -1;
-}
-
-// returns the position of the player on the axis parallel to the track
-// [NB] this function assumes that the player is on the track
-function GetTrackPosition(): float {
-	return (TrackAlongX) ? transform.position.z : transform.position.x;
-}
-
-// makes the player turn along  the y-axis
-function Turn(Direction: boolean) {
-	if (IsGrounded()) {
-		rigidbody.velocity.x = 0;
-		rigidbody.velocity.z = 0;
-		if (Crossroads != null) {
-			Rotate90(Direction, Crossroads.transform);
-		} else {
-			Rotate180(Direction);
-		}
+// makes the player start climbing
+function StartClimbing() {
+	if (CanClimb()) {
+		climbing = true;
+		rigidbody.useGravity = false;
+		//TODO turn the player to face the ladder if it isn't yet
+		//TODO turn the camera to be behind the player (so that it is also facing the ladder) if it isn't yet
 	}
 }
 
-// rotates the player 180 degrees along the y-axis
-function Rotate180(IsClockwise: boolean) {
-		
-	// prepare
-	Listening = false;
-	var Direction: int = IsClockwise ? -1 : 1;
-	var LoopLength: int = 180 / RotationSpeed;
-	audio.pitch = 0.9 - (0.1 * Random.value);
-	audio.pitch = 1 - ((Direction == 1) ? 0.1 : 0) - (0.1 * Random.value);
-	audio.PlayOneShot(Whoosh);
-	
-	// rotate
-	for (var i = 0; i < LoopLength; i++) {
-		transform.localEulerAngles.y += RotationSpeed * Direction;
-		yield;
-	}
-	
-	// finalize
-	Listening = true;
+// returns whether the player is climbing
+function IsClimbing(): boolean {
+	return climbing;
 }
 
-// rotates the player 90 degrees along the y-axis
-// also translates the player to the provided track marker to prevent derailing
-function Rotate90(IsClockwise: boolean, Track: Transform) {
-	
-	// prepare
-	Listening = false;
-	var Direction: int = IsClockwise ? -1 : 1;
-	var LoopLength: int = 90 / RotationSpeed;
-	var XStep = (Track.position.x - transform.position.x) / LoopLength;
-	var ZStep = (Track.position.z - transform.position.z) / LoopLength;
-	audio.pitch = 1 + ((Direction == -1) ? 0.1 : 0) + (0.1 * Random.value);
-	audio.PlayOneShot(Whoosh);
-	
-	// rotate and translate
-	for (var i = 0; i < LoopLength; i++) {
-		transform.localEulerAngles.y += RotationSpeed * Direction;
-		transform.position.x += XStep;
-		transform.position.z += ZStep;
-		yield;
+// makes the player climb
+function Climb(movement: float) {
+	if (!IsClimbing()) {
+		StartClimbing();
+	} else {
+		transform.Translate(Vector3(0, movement * climbSpeed * Time.deltaTime, 0));
 	}
-	
-	// finalize
-	TrackAlongX = !TrackAlongX;
-	TrackPosition = GetTrackPosition();
-	Listening = true;
 }
+
+// makes the player stop climbing
+function StopClimbing() {
+	climbing = false;
+	rigidbody.useGravity = true;
+}
+
+// forces the player to move to the terrain that the ladder leads to
+function FinishClimbing() {
+	//TODO make player step forward
+	StopClimbing();
+	//TODO move the camera so that it is perpendicular to the player as usual
+}
+
+
+/******************/
+/* TRIGGER EVENTS */
+/******************/
 
 // trigger enter events
-// [TODO] abstract so that no switch statement is used
+//TODO abstract so that no switch statement is used
 function OnTriggerEnter(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
-		Crossroads = trigger;
+		crossroads = trigger;
 		break;
 	case 'Track Adjuster':
-		if (!Parallel(trigger.transform)) {
-			TrackAdjuster = trigger;
+		if (!IsParallel(trigger.transform)) {
+			trackAdjuster = trigger;
 		}
 		break;
 	case 'Button':
 		var button: ButtonScript = trigger.GetComponent(ButtonScript);
-		button.OnPush();
+		button.Activate();
 		break;
 	case 'Ladder':
 		nearbyClimbables++;
@@ -253,27 +288,65 @@ function OnTriggerEnter(trigger: Collider) {
 }
 
 // trigger exit events
-// [TODO] abstract so that no switch statement is used
+//TODO abstract so that no switch statement is used
 function OnTriggerExit(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
-		Crossroads = null;
+		crossroads = null;
 		break;
 	case 'Ladder':
 		if (nearbyClimbables > 0) {
 			nearbyClimbables--;
 		}
 		if (nearbyClimbables == 0) {
-			isClimbing = false;
-			rigidbody.useGravity = true;
+			StopClimbing();
 		}
 		break;
 	}
 }
 
+
+/******************************/
+/* TRACKS AND STAYING ON THEM */
+/******************************/
+
+// returns true if a transform is facing the x axis (in either direction)
+function GetAxis(trans: Transform): int {
+	var direction = GetDirection(trans);
+	return (direction == NORTH || direction == SOUTH) ? Z_AXIS : X_AXIS;
+}
+
+// returns the wind-direction the provided transform is facing, or -1 on failure
+function GetDirection(trans: Transform): int {
+	var threshold = 0.001;
+	if (Mathf.Abs(trans.localEulerAngles.y - 0) < threshold) return NORTH;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 90) < threshold) return EAST;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 180) < threshold) return SOUTH;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 270) < threshold) return WEST;
+	else return -1;
+}
+
+// defines the current track
+function SetTrack() {
+	trackAxis = GetAxis(this.transform);
+	trackPosition = (GetTrackAxis() == X_AXIS) ? this.transform.position.z : this.transform.position.x;
+}
+
+// determines the axis of the current track
+//WARNING assumes that the player is on the track
+function GetTrackAxis(): int {
+	return trackAxis;
+}
+
+// determines the position of the current track
+//WARNING assumes that the player is on the track
+function GetTrackPosition(): float {
+	return trackPosition;
+}
+
 // returns true if the player parallels the provided transform
-function Parallel(trans: Transform): boolean {
-	return (GetAxis(transform) == GetAxis(trans));
+function IsParallel(trans: Transform): boolean {
+	return (GetAxis(this.transform) == GetAxis(trans));
 }
 
 // keeps the player on track
@@ -283,69 +356,162 @@ function Align() {
 	transform.localEulerAngles.y = Mathf.RoundToInt(transform.localEulerAngles.y);
 	
 	// correct movement perpendicular to the track
-	if (TrackAlongX) {
-		transform.position.z = TrackPosition;
+	if (GetTrackAxis() == X_AXIS) {
+		this.transform.position.z = GetTrackPosition();
 	} else {
-		transform.position.x = TrackPosition;
+		this.transform.position.x = GetTrackPosition();
 	}
 	
 	// adjust the direction of the player if necessary
-	if (TrackAdjuster != null && (IsGrounded() || (isClimbing && transform.position.y >= TrackAdjuster.transform.position.y))) {
-		Rotate90(true, TrackAdjuster.transform);
-		TrackAdjuster = null;
+	if (trackAdjuster != null && (IsGrounded() || (IsClimbing() && transform.position.y >= trackAdjuster.transform.position.y))) {
+		CrossRoads(CLOCKWISE, trackAdjuster.transform);
+		trackAdjuster = null;
 	}
 	
 }
 
-/* ============================ *
- * ITEMS, CARRYING AND THROWING *
- * ============================ */
 
-// uses an item
-function Use(item: Rigidbody) {
-	switch (item) {
-		case bomb:
-			if (carrying == null) {
-				var bombInstance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
-				PickUp(bombInstance);
-			}
-			break;
+/******************
+ * TURNING AROUND *
+ ******************/
+
+// returns whether the player is currently on a crossroads
+function OnCrossroads(): boolean {
+	return crossroads != null;
+}
+
+// turns the player around either 90 degrees or 180 degrees depending on the prescence of a crossroads
+function Turn(direction: int) {
+	if (IsGrounded()) {
+		rigidbody.velocity.x = 0;
+		rigidbody.velocity.z = 0;
+		if (OnCrossroads()) {
+			CrossRoads(direction, crossroads.transform);
+		} else {
+			UTurn(direction);
+		}
 	}
 }
+
+// rotates the player 180 degrees along the y-axis
+function UTurn(clockDirection: int) {
+		
+	// prepare
+	StopListening();
+	var iterations: int = 180 / rotationSpeed;
+	cameraTrack.pitch = 1 - ((clockDirection == CLOCKWISE) ? 0.1 : 0) - (0.1 * Random.value);
+	cameraTrack.PlayOneShot(cameraSwoop);
+	cameraTrack.pitch = 1;
+	
+	// rotate
+	for (var i = 0; i < iterations; i++) {
+		transform.localEulerAngles.y += rotationSpeed * clockDirection;
+		yield;
+	}
+	
+	// finalize
+	StartListening();
+}
+
+// rotates the player 90 degrees along the y-axis
+// also translates the player to the provided track marker to prevent derailing
+function CrossRoads(clockDirection: int, track: Transform) {
+	
+	// prepare
+	StopListening();
+	var iterations: int = 90 / rotationSpeed;
+	var xStep = (track.position.x - transform.position.x) / iterations;
+	var zStep = (track.position.z - transform.position.z) / iterations;
+	cameraTrack.pitch = 1 + ((clockDirection == CLOCKWISE) ? 0.1 : 0) + (0.1 * Random.value);
+	cameraTrack.PlayOneShot(cameraSwoop);
+	cameraTrack.pitch = 1;
+	
+	// rotate and translate
+	for (var i = 0; i < iterations; i++) {
+		transform.localEulerAngles.y += rotationSpeed * clockDirection;
+		transform.position.x += xStep;
+		transform.position.z += zStep;
+		yield;
+	}
+	
+	// finalize
+	SetTrack();
+	StartListening();
+}
+
+
+/***************
+ * USING ITEMS *
+ ***************/
+//WARNING this is just a test example using bombs
+//TODO move the three item functions to each item's main script
+
+function ItemPress(item: Rigidbody) {
+	if (!IsCarrying()) {
+		var bombInstance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
+		PickUp(bombInstance);
+	}
+}
+
+function ItemHold(item: Rigidbody) {
+	ChargeThrow();
+}
+
+function ItemRelease(item: Rigidbody) {
+	Throw();
+}
+
+/*********************************
+ * CARRYING, AIMING AND THROWING *
+ *********************************/
 
 // pick up an object
 function PickUp(object: Rigidbody) {
 	carrying = object;
+	carrying.transform.position = transform.position + transform.up + (transform.forward * 0.75);
 }
 
 // drags along carried object
 function Carry() {
-	if (carrying != null) {
-		carrying.transform.position = transform.position + Vector3.up;
+	if (IsCarrying()) {
+		carrying.transform.position = transform.position + transform.up + (transform.forward * 0.75);
 		carrying.velocity = rigidbody.velocity;
 	}
 }
 
+// returns whether the player is carrying something
+function IsCarrying(): boolean {
+	return carrying != null;
+}
+
+// drops the object currently being carried
+function Drop() {
+	carrying = null;
+}
+
+// adjusts the aim of the player and updates the crosshair accordingly
+function Aim(movement: float) {
+	throwAngle = Mathf.Max(0, Mathf.Min(throwAngle + movement * 5, 180));
+}
+
 // charges throw
 function ChargeThrow() {
-	if (throwCharge < 1) {
+	if (IsCarrying() && throwCharge < 1) {
 		throwCharge = Mathf.Min(1, throwCharge + Time.deltaTime * (1 / throwChargeDuration));
 	}
 }
 
 // throws carried object
 function Throw() {
-	if (carrying != null) {
+	if (IsCarrying()) {
 		var throwing = carrying;
 		carrying = null;
-		throwing.velocity = (transform.forward * Mathf.Min(1, 1 - Input.GetAxis('Left Stick Vertical')) * throwCharge * throwSpeed) + (Vector3.up * Mathf.Max(0, Input.GetAxis('Left Stick Vertical')) * throwCharge * throwSpeed);
-		throwCharge = 0;
+		var throwRads = throwAngle * (Mathf.PI / 180);
+		throwing.velocity = 
+			this.rigidbody.velocity + 
+			(throwCharge * throwSpeed * transform.forward * Mathf.Sin(throwRads)) + 
+			(throwCharge * throwSpeed * transform.up * Mathf.Cos(throwRads) * -1);
+		vocalTrack.PlayOneShot(playerThrow);
 	}
-}
-
-// progresses cooldowns
-function CoolDown() {
-	if (cooldownB > 0) {
-		cooldownB -= Time.deltaTime;
-	}
+	throwCharge = minThrowCharge;
 }

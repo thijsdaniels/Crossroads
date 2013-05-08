@@ -8,10 +8,18 @@ private var groundedMargin: float = 0.1;
 
 function Start () {
 	verticalBounds = collider.bounds.extents.y;
-	Destroy(this.gameObject, fuseLength);
 }
 
 function Update () {
+
+	// decrease fuse length
+	fuseLength -= Time.deltaTime;
+	audio.pitch += Time.deltaTime / 10;
+	
+	// explode when fuse has run out
+	if (fuseLength <= 0) {
+		Explode();
+	}
 	
 }
 
@@ -19,7 +27,7 @@ function IsGrounded() {
 	return Physics.Raycast(transform.position, Vector3.down, verticalBounds + groundedMargin);
 }
 
-function OnDestroy() {
+function Explode() {
 	
 	// explosion animation
 	if (IsGrounded()) {
@@ -44,5 +52,8 @@ function OnDestroy() {
 		}
 		//TODO if the hit collider has health, decrease it by [damage] amount
 	}
+	
+	// destroy the bomb
+	Destroy(this.gameObject);
 
 }
