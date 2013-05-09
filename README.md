@@ -6,7 +6,7 @@
 
 ## Game Mechanics
 
-### Aiming System
+### Aiming System <code>DONE</code>
 - A crosshair is displayed on the HUD whenever it is relevant.
 - The crosshair behaves like it does in Worms, so it can move in an arc of 180 degrees around the player.
 - When the button for a 'projectile' item is pressed, the player starts charging, as visualized by an, again Worms-like, force meter.
@@ -36,7 +36,7 @@
 
 ### Fix Player Movement
 - What is the correct way to move a rigidbody? Should it be translated, or should a force be applied? The latter seems to work better, but is still not very smooth. Or do all terrain blocks need to have a rigidbody component as well? Or a terrain-collider perhaps?
-- The player should be bounded to the path. What is the best way of doing this? Probably to set a fixed height for the world (say 256 voxels) and make invisible wall colliders of 256 voxels high at the dead end of every path. The main problem that arises from this approach is that if there is a path right above a dead end, that path will be blocked by the invisible wall. This may be solved by setting the height of these invisible walls by hand, but his must be done carefully to avoid gamebreakers.
+- The player should be bound to the path. What is the best way of doing this? Probably to set a fixed height for the world (say 256 voxels) and make invisible wall colliders of 256 voxels high at the dead end of every path. The main problem that arises from this approach is that if there is a path right above a dead end, that path will be blocked by the invisible wall. This may be solved by setting the height of these invisible walls by hand, but his must be done carefully to avoid gamebreakers.
 
 ### Climbables
 - Climbables, such as ladders, may be on a track as well as next to a track.

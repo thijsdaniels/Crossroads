@@ -7,6 +7,7 @@
 // states
 private var listening: boolean = true;
 private var climbing: boolean = false;
+private var carrying: Rigidbody;
 
 // state modifiers
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
@@ -20,6 +21,8 @@ public var throwSpeed: float = 10;
 public var accelerationSpeed: float = 40;
 
 // mechanics
+private var direction: int;
+private var directionMargin: float = 0.8;
 private var verticalBounds: float;
 private var crossroads: Collider = null;
 private var trackAxis: int;
@@ -31,12 +34,11 @@ private var groundedMargin: float = 0.1;
 private var primaryItem: Rigidbody;
 private var secondaryItem: Rigidbody;
 
-// carrying and throwing
-private var carrying: Rigidbody;
-private var throwAngle: float = 135;
-private var minThrowCharge: float = 0.2;
-private var throwCharge: float = minThrowCharge;
-private var throwChargeDuration = 1;
+// aiming
+private var aimAngle: float = 45;
+private var minAimCharge: float = 0.2;
+private var aimCharge: float = minAimCharge;
+private var aimChargeDuration = 1;
 
 // items
 public var bomb: Rigidbody;
@@ -54,6 +56,8 @@ public var playerThrow: AudioClip;
 /*************/
 
 // direction constants
+private static var LEFT = -1;
+private static var RIGHT = 1;
 private static var NORTH = 0;
 private static var EAST = 1;
 private static var SOUTH = 2;
@@ -92,6 +96,9 @@ function Start() {
 	// get axis and position of the current track for use in locking position components
 	SetTrack();
 	
+	// set the direction
+	direction = RIGHT;
+	
 	//DEBUG set the primary item for lack of a method to do so
 	primaryItem = bomb;
 	
@@ -129,7 +136,7 @@ function StopListening() {
 // respond to input
 function CheckInput() {
 	
-	// player movement
+	// player actions
 	if (IsListening()) {
 		if (Input.GetAxis(AXIS_WALK)) {
 			Move(Input.GetAxis(AXIS_WALK));
@@ -138,7 +145,7 @@ function CheckInput() {
 			Climb(Input.GetAxis(AXIS_CLIMB));
 		}
 		if (Input.GetAxis(AXIS_AIM)) {
-			Aim(Input.GetAxis(AXIS_AIM));
+			AdjustAim(Input.GetAxis(AXIS_AIM));
 		}
 		if (Input.GetButtonDown(BUTTON_JUMP)) {
 			Jump();
@@ -177,6 +184,51 @@ function CheckInput() {
 
 
 /******************/
+/* TRIGGER EVENTS */
+/******************/
+
+// trigger enter events
+//TODO abstract so that no switch statement is used
+function OnTriggerEnter(trigger: Collider) {
+	switch (trigger.tag) {
+	case 'Crossroads':
+		crossroads = trigger;
+		break;
+	case 'Track Adjuster':
+		if (!IsParallel(trigger.transform)) {
+			trackAdjuster = trigger;
+		}
+		break;
+	case 'Button':
+		var button: ButtonScript = trigger.GetComponent(ButtonScript);
+		button.Activate();
+		break;
+	case 'Ladder':
+		nearbyClimbables++;
+		break;
+	}
+}
+
+// trigger exit events
+//TODO abstract so that no switch statement is used
+function OnTriggerExit(trigger: Collider) {
+	switch (trigger.tag) {
+	case 'Crossroads':
+		crossroads = null;
+		break;
+	case 'Ladder':
+		if (nearbyClimbables > 0) {
+			nearbyClimbables--;
+		}
+		if (nearbyClimbables == 0) {
+			StopClimbing();
+		}
+		break;
+	}
+}
+
+
+/******************/
 /* BASIC MOVEMENT */
 /******************/
 
@@ -198,6 +250,15 @@ function IsRunning(): boolean {
 
 // moves the player horizontally
 function Move(movement: float) {
+
+	// update the direction
+	if (movement > directionMargin) {
+		direction = RIGHT;
+	} else if (movement < -directionMargin) {
+		direction = LEFT;
+	}
+	
+	// move the player
 	//TODO the way it works now, when you just release the run button while running, 'braking' by pressing the opposite direction won't work until the velocity has reduced to less than the maximum. Instead of doing this, separate left and right velocity and set a 'minimum' (negative maximum) on the left direction. this way you can still brake.
 	var runningFactor: float = IsRunning() ? 1.5 : 1;
 	var groundedFactor: float = IsGrounded() ? 1 : 0.75;
@@ -211,6 +272,11 @@ function Jump() {
 		rigidbody.velocity.y += jumpSpeed;
 		vocalTrack.PlayOneShot(playerJump);
 	}
+}
+
+// returns whether the player is moving to the left or to the right (from the camera's perspective)
+function GetDirection() {
+	return direction;
 }
 
 
@@ -258,51 +324,6 @@ function FinishClimbing() {
 	//TODO make player step forward
 	StopClimbing();
 	//TODO move the camera so that it is perpendicular to the player as usual
-}
-
-
-/******************/
-/* TRIGGER EVENTS */
-/******************/
-
-// trigger enter events
-//TODO abstract so that no switch statement is used
-function OnTriggerEnter(trigger: Collider) {
-	switch (trigger.tag) {
-	case 'Crossroads':
-		crossroads = trigger;
-		break;
-	case 'Track Adjuster':
-		if (!IsParallel(trigger.transform)) {
-			trackAdjuster = trigger;
-		}
-		break;
-	case 'Button':
-		var button: ButtonScript = trigger.GetComponent(ButtonScript);
-		button.Activate();
-		break;
-	case 'Ladder':
-		nearbyClimbables++;
-		break;
-	}
-}
-
-// trigger exit events
-//TODO abstract so that no switch statement is used
-function OnTriggerExit(trigger: Collider) {
-	switch (trigger.tag) {
-	case 'Crossroads':
-		crossroads = null;
-		break;
-	case 'Ladder':
-		if (nearbyClimbables > 0) {
-			nearbyClimbables--;
-		}
-		if (nearbyClimbables == 0) {
-			StopClimbing();
-		}
-		break;
-	}
 }
 
 
@@ -461,20 +482,20 @@ function ItemRelease(item: Rigidbody) {
 	Throw();
 }
 
-/*********************************
- * CARRYING, AIMING AND THROWING *
- *********************************/
+
+/*************************
+ * CARRYING AND DROPPING *
+ *************************/
 
 // pick up an object
 function PickUp(object: Rigidbody) {
 	carrying = object;
-	carrying.transform.position = transform.position + transform.up + (transform.forward * 0.75);
 }
 
 // drags along carried object
 function Carry() {
 	if (IsCarrying()) {
-		carrying.transform.position = transform.position + transform.up + (transform.forward * 0.75);
+		carrying.transform.position = GetCarryingPosition();
 		carrying.velocity = rigidbody.velocity;
 	}
 }
@@ -484,21 +505,56 @@ function IsCarrying(): boolean {
 	return carrying != null;
 }
 
+// returns the position at which the player carries an object
+function GetCarryingPosition(): Vector3 {
+	var carryingPosition = this.transform.up;
+	return this.transform.position + carryingPosition;
+}
+
 // drops the object currently being carried
 function Drop() {
 	carrying = null;
+	//TODO position the carried object on the dropPosition
+}
+
+// returns the position at which the player carries an object
+function GetDropPosition(): Vector3 {
+	var dropPosition = this.transform.forward;
+	return this.transform.position + dropPosition;
+}
+
+
+/***********************
+ * AIMING AND THROWING *
+ ***********************/
+
+// checks whether the player can aim
+function CanAim() {
+	return IsListening() && !IsClimbing();
 }
 
 // adjusts the aim of the player and updates the crosshair accordingly
-function Aim(movement: float) {
-	throwAngle = Mathf.Max(0, Mathf.Min(throwAngle + movement * 5, 180));
+function AdjustAim(movement: float) {
+	if (CanAim()) {
+		aimAngle = Mathf.Max(0, Mathf.Min(aimAngle + movement * 5, 90));
+	}
+}
+
+// returns the angle the player is currently aiming at
+function GetAimAngle() {
+	return aimAngle;
 }
 
 // charges throw
 function ChargeThrow() {
-	if (IsCarrying() && throwCharge < 1) {
-		throwCharge = Mathf.Min(1, throwCharge + Time.deltaTime * (1 / throwChargeDuration));
+	if (IsCarrying() && aimCharge < 1) {
+		aimCharge = Mathf.Min(1, aimCharge + Time.deltaTime * (1 / aimChargeDuration));
 	}
+}
+
+// returns the charge of the player's aim
+function GetAimCharge() {
+	return aimCharge;
 }
 
 // throws carried object
@@ -506,12 +562,12 @@ function Throw() {
 	if (IsCarrying()) {
 		var throwing = carrying;
 		carrying = null;
-		var throwRads = throwAngle * (Mathf.PI / 180);
+		var aimAngleRads = aimAngle * (Mathf.PI / 180);
 		throwing.velocity = 
 			this.rigidbody.velocity + 
-			(throwCharge * throwSpeed * transform.forward * Mathf.Sin(throwRads)) + 
-			(throwCharge * throwSpeed * transform.up * Mathf.Cos(throwRads) * -1);
+			(GetDirection() * aimCharge * throwSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(aimCharge * throwSpeed * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	}
-	throwCharge = minThrowCharge;
+	aimCharge = minAimCharge;
 }
