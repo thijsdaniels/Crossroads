@@ -1,8 +1,12 @@
 #pragma strict
 
-var fuseLength: float = 5;
-var explosion: Transform;
-var explosionGround: Transform;
+public var damage: int = 3;
+public var force: float = 5000;
+public var radius: float = 5;
+public var fuseLength: float = 5;
+public var explosion: Transform;
+public var explosionGround: Transform;
+
 private var verticalBounds: float;
 private var groundedMargin: float = 0.1;
 
@@ -36,21 +40,24 @@ function Explode() {
 		Instantiate(explosion, this.transform.position, Quaternion.Euler(90,0,0));
 	}
 	
-	// explosion parameters
-	var position: Vector3 = transform.position;
-	var damage: float = 1;
-	var force: float = 5000;
-	var radius: float = 5;
-	var upward: float = 0;
-	
 	// loop over victims
-	var colliders: Collider[] = Physics.OverlapSphere (position, radius);
+	var colliders: Collider[] = Physics.OverlapSphere (this.transform.position, radius);
 	for (var hit: Collider in colliders) {
+		
+		// this is some null check that was recommended by Unity, but I don't really understand its purpose: how can hit be false at this point?
 		if (!hit) continue;
+		
+		// if the collider has a rigidbody, apply a blastforce
 		if (hit.rigidbody) {
-			hit.rigidbody.AddExplosionForce(force, position, radius, upward);
+			hit.rigidbody.AddExplosionForce(force, this.transform.position, radius, 0);
 		}
-		//TODO if the hit collider has health, decrease it by [damage] amount
+		
+		// if the collider has health, inflict damage to it
+		var healthScript: HealthScript = hit.transform.gameObject.GetComponent(HealthScript);
+		if (healthScript != null) {
+			healthScript.InstantDamage(damage);
+		}
+		
 	}
 	
 	// destroy the bomb

@@ -7,10 +7,8 @@
 // states
 private var listening: boolean = true;
 private var climbing: boolean = false;
-private var carrying: Rigidbody;
-
-// state modifiers
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
+private var carrying: Rigidbody;
 
 // speeds
 public var maxSpeed: float = 7.5;
@@ -83,6 +81,12 @@ private static var AXIS_CAMERA = 'Right Stick Vertical';
 private static var BUTTON_MENU = 'Start';
 private static var BUTTON_INVENTORY = 'Back';
 
+// debug controller constants
+private static var DEBUG_HEALTH_INCREMENT = 'Num Add';
+private static var DEBUG_HEALTH_DECREMENT = 'Num Subtract';
+private static var DEBUG_TIME_DOUBLE = 'Num Multiply';
+private static var DEBUG_TIME_HALF = 'Num Divide';
+
 
 /***************/
 /* CONSTRUCTOR */
@@ -104,11 +108,15 @@ function Start() {
 	
 }
 
+/**********/
 /* LOOPER */
-function FixedUpdate() {
+/**********/
+
+function Update() {
 	
 	// get player input
 	CheckInput();
+	CheckDebugInput();
 	
 	// keep player on track
 	Align();
@@ -179,6 +187,22 @@ function CheckInput() {
 	// game status
 	if (Input.GetButtonDown(BUTTON_MENU)) {
 		Application.Quit();
+	}
+}
+
+// respond to input that is intended for debugging purposes
+function CheckDebugInput() {
+	if (Input.GetButtonDown(DEBUG_HEALTH_INCREMENT)) {
+		GetComponent(HealthScript).InstantHeal(1);
+	}
+	if (Input.GetButtonDown(DEBUG_HEALTH_DECREMENT)) {
+		GetComponent(HealthScript).InstantDamage(1);
+	}
+	if (Input.GetButtonDown(DEBUG_TIME_DOUBLE)) {
+		Time.timeScale *= 2;
+	}
+	if (Input.GetButtonDown(DEBUG_TIME_HALF)) {
+		Time.timeScale /= 2;
 	}
 }
 

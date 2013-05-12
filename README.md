@@ -31,7 +31,7 @@
   - With the X Button when nothing is equiped (which would mean the player cannot attack in this case, and cannot run when something is equipped)?
   - Make it so that the player jumps on releasing the A Button and runs while the A Button is still pressed (which would mean that the player would forcefully jump when it would stop running)?
 
-### Health System
+### Health System <code>done</code>
 - Copied off of Zelda, the player has a certain amount of hearts, each consisting of 4 health units.
 
 ### Fix Player Movement
@@ -48,6 +48,7 @@
 - Make chunks, that each contain a certain number of terrain voxels.
 - Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
 - Each terrain voxel should call a re-render of its chunk when it is destroyed or created.
+- The terrain (and other relevant game objects) that are on the camera-side of the player will be disabled, with the exception of the row right in front of the player. This way, nothing unintentionally blocks the view and things like treasure chests and NPCs, which must be in the rows adjacent to the player's track anyway, will still be visible.
 
 ## Gameplay
 
