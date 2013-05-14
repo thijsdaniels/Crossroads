@@ -19,11 +19,11 @@ function FixedUpdate() {
 
 function Respond() {
 	if (listening) {
-		if (Input.GetAxis("D-Pad Horizontal")) {
-			distance = Mathf.Max(minDistance, Mathf.Min(30, distance + Input.GetAxis("D-Pad Horizontal") / 2));
+		if (Input.GetAxis("Right Stick Horizontal")) {
+			distance = Mathf.Max(minDistance, Mathf.Min(30, distance + Input.GetAxis("Right Stick Horizontal") / 2));
 		}
-		if (Input.GetAxis("D-Pad Vertical")) {
-			angle = Mathf.Max(minAngle, Mathf.Min(25, angle + Input.GetAxis("D-Pad Vertical") / 2));
+		if (Input.GetAxis("Right Stick Vertical")) {
+			angle = Mathf.Max(minAngle, Mathf.Min(25, angle + Input.GetAxis("Right Stick Vertical") / 2));
 		}
 	}
 }

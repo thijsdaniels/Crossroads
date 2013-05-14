@@ -28,9 +28,18 @@ private var trackPosition: float;
 private var trackAdjuster: Collider = null;
 private var groundedMargin: float = 0.1;
 
+// context action
+private var contextName: String = 'none';
+private var contextAction: Function;
+private var contextObject: GameObject;
+
 // item slots
 private var primaryItem: Rigidbody;
 private var secondaryItem: Rigidbody;
+private var firstReserve: Rigidbody;
+private var secondReserve: Rigidbody;
+private var thirdReserve: Rigidbody;
+private var fourthReserve: Rigidbody;
 
 // aiming
 private var aimAngle: float = 45;
@@ -80,6 +89,8 @@ private static var BUTTON_TURN_LEFT = 'Left Button';
 private static var AXIS_CAMERA = 'Right Stick Vertical';
 private static var BUTTON_MENU = 'Start';
 private static var BUTTON_INVENTORY = 'Back';
+private static var AXIS_RESERVE_VERTICAL = 'D-Pad Vertical';
+private static var AXIS_RESERVE_HORIZONTAL = 'D-Pad Horizontal';
 
 // debug controller constants
 private static var DEBUG_HEALTH_INCREMENT = 'Num Add';
@@ -104,7 +115,7 @@ function Start() {
 	direction = RIGHT;
 	
 	//DEBUG set the primary item for lack of a method to do so
-	primaryItem = bomb;
+	firstReserve = bomb;
 	
 }
 
@@ -176,11 +187,26 @@ function CheckInput() {
 		if (Input.GetButtonUp(BUTTON_ITEM_SECONDARY)) {
 			ItemRelease(secondaryItem);
 		}
+		if (Input.GetButtonDown(BUTTON_CONTEXT)) {
+			if (contextAction != null) contextAction(contextObject);
+		}
 		if (Input.GetButtonDown(BUTTON_TURN_RIGHT)) {
 			Turn(CLOCKWISE);
 		}
 		if (Input.GetButtonDown(BUTTON_TURN_LEFT)) {
 			Turn(COUNTERCLOCKWISE);
+		}
+		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) > 0) {
+			EquipPrimary(firstReserve);
+		}
+		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) < 0) {
+			EquipPrimary(thirdReserve);
+		}
+		if (Input.GetAxis(AXIS_RESERVE_HORIZONTAL) > 0) {
+			EquipPrimary(secondReserve);
+		}
+		if (Input.GetAxis(AXIS_RESERVE_HORIZONTAL) < 0) {
+			EquipPrimary(fourthReserve);
 		}
 	}
 	
@@ -230,6 +256,9 @@ function OnTriggerEnter(trigger: Collider) {
 	case 'Ladder':
 		nearbyClimbables++;
 		break;
+	case 'TreasureChest':
+		SetContextAction('Open', trigger.gameObject, OpenTreasureChest);
+		break;
 	}
 }
 
@@ -247,6 +276,9 @@ function OnTriggerExit(trigger: Collider) {
 		if (nearbyClimbables == 0) {
 			StopClimbing();
 		}
+		break;
+	case 'TreasureChest':
+		ClearContextAction();
 		break;
 	}
 }
@@ -488,13 +520,44 @@ function CrossRoads(clockDirection: int, track: Transform) {
 /***************
  * USING ITEMS *
  ***************/
-//WARNING this is just a test example using bombs
-//TODO move the three item functions to each item's main script
+
+function GetPrimaryItem(): Rigidbody {
+	return primaryItem;
+}
+
+function GetSecondaryItem(): Rigidbody {
+	return secondaryItem;
+}
+
+function GetFirstReserve(): Rigidbody {
+	return firstReserve;
+}
+
+function GetSecondReserve(): Rigidbody {
+	return secondReserve;
+}
+
+function GetThirdReserve(): Rigidbody {
+	return thirdReserve;
+}
+
+function GetFourthReserve(): Rigidbody {
+	return fourthReserve;
+}
+
+function EquipPrimary(item: Rigidbody) {
+	primaryItem = item;
+}
+
+//WARNING the below three functions are just test examples using bombs
+//TODO move the below three functions to each item's main script
 
 function ItemPress(item: Rigidbody) {
-	if (!IsCarrying()) {
-		var bombInstance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
-		PickUp(bombInstance);
+	if (item != null) {
+		if (!IsCarrying()) {
+			var instance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
+			PickUp(instance);
+		}
 	}
 }
 
@@ -504,6 +567,36 @@ function ItemHold(item: Rigidbody) {
 
 function ItemRelease(item: Rigidbody) {
 	Throw();
+}
+
+
+/******************
+ * CONTEXT ACTION *
+ ******************/
+ 
+function GetContextName(): String {
+	return contextName;
+}
+
+function GetContextAction(): Function {
+	return contextAction;
+}
+
+function SetContextAction(name: String, object: GameObject, action: Function) {
+	contextName = name;
+	contextAction = action;
+	contextObject = object;
+}
+
+function ClearContextAction() {
+	contextName = 'none';
+	contextAction = null;
+	contextObject = null;
+}
+
+function OpenTreasureChest(treasureChest: GameObject) {
+	Debug.Log('opened chest');
+	ClearContextAction();
 }
 
 

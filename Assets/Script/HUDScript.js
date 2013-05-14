@@ -3,20 +3,30 @@
  * the elements of the user interface. As such, it forms the link
  * between the player and the UI. */
 
+// player
 private var player: PlayerScript;
+
+// health
 private var playerHealth: HealthScript;
-private var clock: GUIText;
 private var healthDisplayed: int = 0;
 private var maxHealthDisplayed: int = 0;
-private var dPad: GameObject;
-private var miniMap: GameObject;
-private var buttonSet: GameObject;
-
 public var heart4: GUITexture;
 public var heart3: GUITexture;
 public var heart2: GUITexture;
 public var heart1: GUITexture;
 public var heart0: GUITexture;
+
+// clock
+private var clock: GUIText;
+
+// buttons
+private var primaryItemButton: GUIText;
+private var secondaryItemButton: GUIText;
+private var firstReserveButton: GUIText;
+private var secondReserveButton: GUIText;
+private var thirdReserveButton: GUIText;
+private var fourthReserveButton: GUIText;
+private var contextualActionButton: GUIText;
 
 function Start () {
 	
@@ -31,6 +41,22 @@ function Start () {
 	var clockObject = GameObject.Find('HUD/Clock');
 	clock = clockObject.GetComponent(GUIText);
 	
+	// get references to the buttons
+	var primaryItemButtonObject = GameObject.Find('HUD/Item1');
+	var secondaryItemButtonObject = GameObject.Find('HUD/Item2');
+	var firstReserveButtonObject = GameObject.Find('HUD/Reserve1');
+	var secondReserveButtonObject = GameObject.Find('HUD/Reserve2');
+	var thirdReserveButtonObject = GameObject.Find('HUD/Reserve3');
+	var fourthReserveButtonObject = GameObject.Find('HUD/Reserve4');
+	var contextualActionButtonObject = GameObject.Find('HUD/Context');
+	primaryItemButton = primaryItemButtonObject.GetComponent(GUIText);
+	secondaryItemButton = secondaryItemButtonObject.GetComponent(GUIText);
+	firstReserveButton = firstReserveButtonObject.GetComponent(GUIText);
+	secondReserveButton = secondReserveButtonObject.GetComponent(GUIText);
+	thirdReserveButton = thirdReserveButtonObject.GetComponent(GUIText);
+	fourthReserveButton = fourthReserveButtonObject.GetComponent(GUIText);
+	contextualActionButton = contextualActionButtonObject.GetComponent(GUIText);
+	
 }
 
 function Update() {
@@ -40,6 +66,9 @@ function Update() {
 	
 	// display the health
 	UpdateHealth();
+	
+	// display the button actions
+	UpdateButtons();
 	
 }
 
@@ -98,21 +127,12 @@ function DisplayHealth(health: int, maxHealth: int) {
 	
 }
 
-function SetButtonImage(button: GUITexture, image: GUITexture) {
-	
-	ClearButton(button);
-	//TODO set the image
-	
-}
-
-function SetButtonText(button: GUITexture, text: String) {
-
-	ClearButton(button);
-	//TODO set the text
-	
-}
-
-function ClearButton(button: GUITexture) {
-	SetButtonText(button, null);
-	SetButtonImage(button, null);
+function UpdateButtons() {
+	primaryItemButton.text = (player.GetPrimaryItem() != null) ? player.GetPrimaryItem().name : 'none';
+	secondaryItemButton.text = (player.GetSecondaryItem() != null) ? player.GetSecondaryItem().name : 'none';
+	firstReserveButton.text = (player.GetFirstReserve() != null) ? player.GetFirstReserve().name : 'none';
+	secondReserveButton.text = (player.GetSecondReserve() != null) ? player.GetSecondReserve().name : 'none';
+	thirdReserveButton.text = (player.GetThirdReserve() != null) ? player.GetThirdReserve().name : 'none';
+	fourthReserveButton.text = (player.GetFourthReserve() != null) ? player.GetFourthReserve().name : 'none';
+	contextualActionButton.text = player.GetContextName();
 }
