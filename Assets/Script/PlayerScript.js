@@ -16,6 +16,7 @@ public var jumpSpeed: float = 7.5;
 public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
 public var climbSpeed: float = 5;
 public var throwSpeed: float = 10;
+public var shootSpeed: float = 40;
 public var accelerationSpeed: float = 40;
 
 // mechanics
@@ -49,6 +50,7 @@ private var aimChargeDuration = 1;
 
 // items
 public var bomb: Rigidbody;
+public var arrow: Rigidbody;
 
 // audio
 public var vocalTrack: AudioSource;
@@ -116,6 +118,7 @@ function Start() {
 	
 	//DEBUG set the primary item for lack of a method to do so
 	firstReserve = bomb;
+	secondReserve = arrow;
 	
 }
 
@@ -553,8 +556,8 @@ function EquipPrimary(item: Rigidbody) {
 //TODO move the below three functions to each item's main script
 
 function ItemPress(item: Rigidbody) {
-	if (item != null) {
-		if (!IsCarrying()) {
+	if (!IsCarrying()) {
+		if (item == bomb) {
 			var instance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
 			PickUp(instance);
 		}
@@ -562,11 +565,18 @@ function ItemPress(item: Rigidbody) {
 }
 
 function ItemHold(item: Rigidbody) {
-	ChargeThrow();
+	if (item == bomb || item == arrow) {
+		ChargeAim();
+	}
 }
 
 function ItemRelease(item: Rigidbody) {
-	Throw();
+	if (item == bomb) {
+		Throw();
+	}
+	else if (item == arrow) {
+		Shoot(item);
+	}
 }
 
 
@@ -663,8 +673,8 @@ function GetAimAngle() {
 }
 
 // charges throw
-function ChargeThrow() {
-	if (IsCarrying() && aimCharge < 1) {
+function ChargeAim() {
+	if (aimCharge < 1) {
 		aimCharge = Mathf.Min(1, aimCharge + Time.deltaTime * (1 / aimChargeDuration));
 	}
 }
@@ -672,6 +682,11 @@ function ChargeThrow() {
 // returns the charge of the player's aim
 function GetAimCharge() {
 	return aimCharge;
+}
+
+// returns the minimum charge of the player's aim
+function IsAimCharged() {
+	return aimCharge > minAimCharge;
 }
 
 // throws carried object
@@ -686,5 +701,17 @@ function Throw() {
 			(aimCharge * throwSpeed * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	}
+	aimCharge = minAimCharge;
+}
+
+// shoots a projectile
+function Shoot(projectile: Rigidbody) {
+	var instance = Instantiate(projectile, transform.position + Vector3.up, Quaternion.identity);
+	var aimAngleRads = aimAngle * (Mathf.PI / 180);
+	instance.velocity = 
+			this.rigidbody.velocity + 
+			(GetDirection() * aimCharge * shootSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(aimCharge * shootSpeed * transform.up * Mathf.Sin(aimAngleRads));
+		vocalTrack.PlayOneShot(playerThrow);
 	aimCharge = minAimCharge;
 }

@@ -14,7 +14,7 @@ function Start () {
 function Update () {
 
 	// determine whether the crosshair is useful
-	if (targetScript.IsCarrying()) {
+	if (targetScript.IsAimCharged()) {
 	
 		// get player's aiming angle
 		var aimAngle = targetScript.GetAimAngle();
