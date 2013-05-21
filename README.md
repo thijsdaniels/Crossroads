@@ -1,8 +1,14 @@
 # Crossroads
 
-### Somewhere between the second and third dimensions.
+### A 2.75D platformer adventure game, inspired by Zelda, FEZ and Mario.
 
-# Task List
+# Task List <code>Demo Alpha Version</code>
+
+## Voxel-Engine
+- Make chunks that each contain a certain number of terrain voxels.
+- Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
+- Each terrain voxel should call a re-render of its chunk when it is destroyed or created.
+- <code>DONE</code>The terrain (and other relevant game objects) that are on the camera-side of the player will be disabled, with the exception of the row right in front of the player. This way, nothing unintentionally blocks the view and things like treasure chests and NPCs, which must be in the rows adjacent to the player's track anyway, will still be visible.
 
 ## Game Mechanics
 
@@ -37,6 +43,9 @@
 ### Fix Player Movement
 - What is the correct way to move a rigidbody? Should it be translated, or should a force be applied? The latter seems to work better, but is still not very smooth. Or do all terrain blocks need to have a rigidbody component as well? Or a terrain-collider perhaps?
 - The player should be bound to the path. What is the best way of doing this? Probably to set a fixed height for the world (say 256 voxels) and make invisible wall colliders of 256 voxels high at the dead end of every path. The main problem that arises from this approach is that if there is a path right above a dead end, that path will be blocked by the invisible wall. This may be solved by setting the height of these invisible walls by hand, but his must be done carefully to avoid gamebreakers.
+- The player does not collide well with terrain objects, presumably this will be fixed together with the movement issue.
+- The player's jumping method is not as good as I would like it to be. He should jump higher, but also be heavier.
+- The IsGrounded() function currently uses a raycast. It might be necessary to switch to a capsulecast.
 
 ### Climbables
 - Climbables, such as ladders, may be on a track as well as next to a track.
@@ -44,11 +53,25 @@
 - If a climbable is next to the track, instead the player will turn to face the ladder when the player starts climbing. the camera will then switch to be perpendicular to the player when the player stops climbing.
 - Should ladders that are next to the track on the camera-side be visible and climbable?
 
-## Voxel-Engine
-- Make chunks, that each contain a certain number of terrain voxels.
-- Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
-- Each terrain voxel should call a re-render of its chunk when it is destroyed or created.
-- The terrain (and other relevant game objects) that are on the camera-side of the player will be disabled, with the exception of the row right in front of the player. This way, nothing unintentionally blocks the view and things like treasure chests and NPCs, which must be in the rows adjacent to the player's track anyway, will still be visible.
+### Buttons and Levers
+- What is the best way to implement different types of buttons? Can I set a function name as a variable, or do I have to make different scripts for each button type?
+- Make buttons / levers that, instead of activating once, like a button, can be toggled between active and non-active states.
+- Make pushable and grabable crates that, like in zelda, can be dropped on top of buttons.
+
+### Treasure Chests
+- What is the best way to implement different content for treasure chests? Can I set a function name as a variable, or should I use a GameObject?
+- Make the treasure chest script.
+
+### Items
+- Make an inventory from where the player can bind items to the d-pad and a and x buttons.
+- Make a sword.
+
+### Enemies
+- Make a prototype enemy.
+
+### Time and Weather
+- Make a moon.
+- Make a script for the weather controller that spawns clouds and makes it rain, snow and thunder.
 
 ## Gameplay
 
