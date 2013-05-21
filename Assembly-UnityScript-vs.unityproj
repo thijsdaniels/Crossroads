@@ -49,6 +49,7 @@
      <Compile Include="Assets\Script\ButtonScript.js" />
      <Compile Include="Assets\Script\CameraScript.js" />
      <Compile Include="Assets\Script\CrosshairScript.js" />
+     <Compile Include="Assets\Script\EnvironmentScript.js" />
      <Compile Include="Assets\Script\HUDScript.js" />
      <Compile Include="Assets\Script\HealthScript.js" />
      <Compile Include="Assets\Script\MiniMapScript.js" />

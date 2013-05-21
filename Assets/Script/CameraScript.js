@@ -1,8 +1,8 @@
 #pragma strict
 
 var listening: boolean = true;
-var Player: GameObject;
-var FollowDelayFactor: float = 3;
+var player: GameObject;
+var followDelayFactor: float = 3;
 var distance: float = 10;
 var angle: float = 1;
 var minDistance: float = 5;
@@ -31,12 +31,12 @@ function Respond() {
 function Follow() {
 	
 	// transform position
-	var PlayerOrientation: float = Player.transform.localEulerAngles.y / (180 / Mathf.PI);
-	transform.position.x += (Player.transform.position.x + (distance * Mathf.Cos(PlayerOrientation)) - transform.position.x) / FollowDelayFactor;
-	transform.position.y += ((Player.transform.position.y + angle) - transform.position.y) / FollowDelayFactor;
-	transform.position.z += (Player.transform.position.z - (distance * Mathf.Sin(PlayerOrientation)) - transform.position.z) / FollowDelayFactor;
+	var playerOrientation: float = player.transform.localEulerAngles.y / (180 / Mathf.PI);
+	transform.position.x += (player.transform.position.x + (distance * Mathf.Cos(playerOrientation)) - transform.position.x) / followDelayFactor;
+	transform.position.y += ((player.transform.position.y + angle) - transform.position.y) / followDelayFactor;
+	transform.position.z += (player.transform.position.z - (distance * Mathf.Sin(playerOrientation)) - transform.position.z) / followDelayFactor;
 	
 	// transfom orientation
-	transform.LookAt(Player.transform);
+	transform.LookAt(player.transform);
 	
 }

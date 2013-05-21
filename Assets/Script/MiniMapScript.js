@@ -2,7 +2,7 @@
 
 var target: Transform;
 var distance: float = 20;
-var storedShadowDistance: float;
+//var storedShadowDistance: float;
 
 function Start() {
 
@@ -20,10 +20,10 @@ function Follow() {
 }
 
 function OnPreRender() {
-    storedShadowDistance = QualitySettings.shadowDistance;
-    QualitySettings.shadowDistance = 0;
+    //storedShadowDistance = QualitySettings.shadowDistance;
+    //QualitySettings.shadowDistance = 0;
 }
  
 function OnPostRender() {
-    QualitySettings.shadowDistance = storedShadowDistance;
+    //QualitySettings.shadowDistance = storedShadowDistance;
 }

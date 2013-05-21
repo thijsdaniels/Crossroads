@@ -1,9 +1,10 @@
 #pragma strict
 
-var terrain: GameObject[,,];
-var numBlocks: int;
-var terrainSize: Vector3;
-var terrainOffset: Vector3;
+// globals
+public static var terrain: GameObject[,,];
+public static var numBlocks: int;
+public static var terrainSize: Vector3;
+public static var terrainOffset: Vector3;
 
 function Start() {
 	
@@ -18,7 +19,7 @@ function Update() {
 }
 
 function AlignBlocks() {
-	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Terrain');
+	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Voxel');
 	for (var i = 0; i < blocks.Length; i++) {
 		blocks[i].transform.position.x = Mathf.Round(blocks[i].transform.position.x);
 		blocks[i].transform.position.y = Mathf.Round(blocks[i].transform.position.y);
@@ -27,7 +28,7 @@ function AlignBlocks() {
 }
 
 function PopulateTerrainArray() {
-	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Terrain');
+	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Voxel');
 	GetTerrainSize(blocks);
 	terrain = new GameObject[terrainSize.x, terrainSize.y, terrainSize.z];
 	for (var i = 0; i < blocks.Length; i++) {
@@ -65,11 +66,13 @@ function GetTerrainSize(blocks: GameObject[]) {
 
 function AddBlock(block: GameObject) {
 	var position = Normalize(block.transform.position);
+	if (terrain[position.x, position.y, position.z] != null) Debug.Log('TERRAIN WARNING: Duplicate Block found at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
 	terrain[position.x, position.y, position.z] = block;
 }
 
 function RemoveBlock(block: GameObject) {
 	var position = Normalize(block.transform.position);
+	if (terrain[position.x, position.y, position.z] == null) Debug.Log('TERRAIN WARNING: Attempt to remove non-existing Block at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
 	terrain[position.x, position.y, position.z] = null;
 }
 
@@ -92,17 +95,16 @@ function Normalize(position: Vector3): Vector3 {
 
 function OutOfBounds(position: Vector3): boolean {
 	
-	var outOfBounds: boolean = false;
 	if (position.x < 0 || position.x >= terrainSize.x) {
-		outOfBounds = true;
+		return true;
 	}
 	if (position.y < 0 || position.y >= terrainSize.y) {
-		outOfBounds = true;
+		return true;
 	}
 	if (position.z < 0 || position.z >= terrainSize.z) {
-		outOfBounds = true;
+		return true;
 	}
-	return outOfBounds;
+	return false;
 	
 }
 
@@ -126,20 +128,23 @@ function DoubleCheck() {
 }
 
 function GenerateTerrainGeometry() {
+	var hullBlocks = 0;
 	for (var x = 0; x < terrainSize.x; x++) {
 		for (var y = 0; y < terrainSize.y; y++) {
 			for (var z = 0; z < terrainSize.z; z++) {
 				var block: GameObject = terrain[x, y, z];
 				if (block != null) {
 					if (IsHull(block, Vector3(x, y, z))) {
-						Disable(block);
+						DisableBlock(block);
+						hullBlocks++;
 					} else {
-						//RegenerateMesh(block, Vector3(x, y, z));
+						//GenerateMesh(block, Vector3(x, y, z));
 					}
 				}
 			}
 		}
 	}
+	Debug.Log(hullBlocks + ' Hull Blocks were disabled.');
 }
 
 function IsHull(block: GameObject, position: Vector3): boolean {
@@ -153,11 +158,19 @@ function IsHull(block: GameObject, position: Vector3): boolean {
 	;
 }
 
-function Disable(block: GameObject) {
+function CheckBlock(position: Vector3): boolean {
+	if (!OutOfBounds(position) && terrain[position.x, position.y, position.z] != null) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function DisableBlock(block: GameObject) {
 	block.renderer.enabled = false;
 }
 
-function RegenerateMesh(block: GameObject, position: Vector3) {
+function GenerateMesh(block: GameObject, position: Vector3) {
 	
 	var meshFilter: MeshFilter = block.GetComponent(MeshFilter);
 	meshFilter.mesh.Clear();
@@ -234,12 +247,4 @@ function RegenerateMesh(block: GameObject, position: Vector3) {
 	
 	meshFilter.mesh = mesh;
 	
-}
-
-function CheckBlock(position: Vector3): boolean {
-	if (!OutOfBounds(position) && terrain[position.x, position.y, position.z] != null) {
-		return true;
-	} else {
-		return false;
-	}
 }

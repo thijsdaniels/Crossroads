@@ -25,7 +25,7 @@ private var directionMargin: float = 0.8;
 private var verticalBounds: float;
 private var crossroads: Collider = null;
 private var trackAxis: int;
-private var trackPosition: float;
+private var trackPosition: int;
 private var trackAdjuster: Collider = null;
 private var groundedMargin: float = 0.1;
 
@@ -64,17 +64,9 @@ public var playerThrow: AudioClip;
 /* CONSTANTS */
 /*************/
 
-// direction constants
+// direction
 private static var LEFT = -1;
 private static var RIGHT = 1;
-private static var NORTH = 0;
-private static var EAST = 1;
-private static var SOUTH = 2;
-private static var WEST = 3;
-private static var X_AXIS = 0;
-private static var Z_AXIS = 1;
-private static var CLOCKWISE = -1;
-private static var COUNTERCLOCKWISE = 1;
 
 // controller constants
 private static var BUTTON_JUMP = 'A';
@@ -110,8 +102,13 @@ function Start() {
 	// get distance to ground for use in raycasting
 	verticalBounds = this.collider.bounds.extents.y;
 	
-	// get axis and position of the current track for use in locking position components
-	SetTrack();
+	// initialize the track, based on the player's initial position
+	var playerAxis = GetAxis(this.transform);
+	var playerAxisPosition = GetAxisPosition(playerAxis, this.transform);
+	SetTrack(playerAxis, playerAxisPosition);
+	
+	// hide the terrain
+	EnvironmentScript.HideEnvironment(GetTrackAxis(), GetTrackPosition(), EnvironmentScript.NORTH);
 	
 	// set the direction
 	direction = RIGHT;
@@ -194,10 +191,10 @@ function CheckInput() {
 			if (contextAction != null) contextAction(contextObject);
 		}
 		if (Input.GetButtonDown(BUTTON_TURN_RIGHT)) {
-			Turn(CLOCKWISE);
+			Turn(EnvironmentScript.CLOCKWISE);
 		}
 		if (Input.GetButtonDown(BUTTON_TURN_LEFT)) {
-			Turn(COUNTERCLOCKWISE);
+			Turn(EnvironmentScript.COUNTERCLOCKWISE);
 		}
 		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) > 0) {
 			EquipPrimary(firstReserve);
@@ -334,7 +331,7 @@ function Jump() {
 }
 
 // returns whether the player is moving to the left or to the right (from the camera's perspective)
-function GetDirection() {
+function GetPlayerDirection() {
 	return direction;
 }
 
@@ -391,35 +388,47 @@ function FinishClimbing() {
 /******************************/
 
 // returns true if a transform is facing the x axis (in either direction)
+//TODO move this to EnvironmentScript?
 function GetAxis(trans: Transform): int {
 	var direction = GetDirection(trans);
-	return (direction == NORTH || direction == SOUTH) ? Z_AXIS : X_AXIS;
+	return (direction == EnvironmentScript.NORTH || direction == EnvironmentScript.SOUTH) ? EnvironmentScript.Z_AXIS : EnvironmentScript.X_AXIS;
 }
 
 // returns the wind-direction the provided transform is facing, or -1 on failure
+//TODO move this to EnvironmentScript?
 function GetDirection(trans: Transform): int {
 	var threshold = 0.001;
-	if (Mathf.Abs(trans.localEulerAngles.y - 0) < threshold) return NORTH;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 90) < threshold) return EAST;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 180) < threshold) return SOUTH;
-	else if (Mathf.Abs(trans.localEulerAngles.y - 270) < threshold) return WEST;
+	if (Mathf.Abs(trans.localEulerAngles.y - 0) < threshold) return EnvironmentScript.NORTH;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 90) < threshold) return EnvironmentScript.EAST;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 180) < threshold) return EnvironmentScript.SOUTH;
+	else if (Mathf.Abs(trans.localEulerAngles.y - 270) < threshold) return EnvironmentScript.WEST;
 	else return -1;
 }
 
+// returns the axis perpendicular to the provided axis
+function GetPerpendicularAxis(axis: int) {
+	return (axis == EnvironmentScript.X_AXIS) ? EnvironmentScript.Z_AXIS : EnvironmentScript.X_AXIS;
+}
+
+// returns the position of an axis on the perpendicular axis
+//TODO move this to EnvironmentScript?
+function GetAxisPosition(axis: int, trans: Transform): int {
+	if (axis == EnvironmentScript.X_AXIS) return trans.position.z;
+	else return trans.position.x;
+}
+
 // defines the current track
-function SetTrack() {
-	trackAxis = GetAxis(this.transform);
-	trackPosition = (GetTrackAxis() == X_AXIS) ? this.transform.position.z : this.transform.position.x;
+function SetTrack(axis: int, position: int) {
+	trackAxis = axis;
+	trackPosition = position;
 }
 
 // determines the axis of the current track
-//WARNING assumes that the player is on the track
 function GetTrackAxis(): int {
 	return trackAxis;
 }
 
 // determines the position of the current track
-//WARNING assumes that the player is on the track
 function GetTrackPosition(): float {
 	return trackPosition;
 }
@@ -436,7 +445,7 @@ function Align() {
 	transform.localEulerAngles.y = Mathf.RoundToInt(transform.localEulerAngles.y);
 	
 	// correct movement perpendicular to the track
-	if (GetTrackAxis() == X_AXIS) {
+	if (GetTrackAxis() == EnvironmentScript.X_AXIS) {
 		this.transform.position.z = GetTrackPosition();
 	} else {
 		this.transform.position.x = GetTrackPosition();
@@ -444,7 +453,7 @@ function Align() {
 	
 	// adjust the direction of the player if necessary
 	if (trackAdjuster != null && (IsGrounded() || (IsClimbing() && transform.position.y >= trackAdjuster.transform.position.y))) {
-		CrossRoads(CLOCKWISE, trackAdjuster.transform);
+		CrossRoads(EnvironmentScript.CLOCKWISE, trackAdjuster.transform);
 		trackAdjuster = null;
 	}
 	
@@ -479,9 +488,10 @@ function UTurn(clockDirection: int) {
 	// prepare
 	StopListening();
 	var iterations: int = 180 / rotationSpeed;
-	cameraTrack.pitch = 1 - ((clockDirection == CLOCKWISE) ? 0.1 : 0) - (0.1 * Random.value);
+	cameraTrack.pitch = 1 - ((clockDirection == EnvironmentScript.CLOCKWISE) ? 0.1 : 0) - (0.1 * Random.value);
 	cameraTrack.PlayOneShot(cameraSwoop);
 	cameraTrack.pitch = 1;
+	EnvironmentScript.HideEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 + 2, 4));
 	
 	// rotate
 	for (var i = 0; i < iterations; i++) {
@@ -490,6 +500,7 @@ function UTurn(clockDirection: int) {
 	}
 	
 	// finalize
+	EnvironmentScript.ShowEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 - 2, 4));
 	StartListening();
 }
 
@@ -499,14 +510,17 @@ function CrossRoads(clockDirection: int, track: Transform) {
 	
 	// prepare
 	StopListening();
+	cameraTrack.pitch = 1 + ((clockDirection == EnvironmentScript.CLOCKWISE) ? 0.1 : 0) + (0.1 * Random.value);
+	cameraTrack.PlayOneShot(cameraSwoop);
+	cameraTrack.pitch = 1;
+	var newTrackAxis = GetPerpendicularAxis(GetTrackAxis());
+	var newTrackPosition = GetAxisPosition(newTrackAxis, track);
+	EnvironmentScript.HideEnvironment(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1 + clockDirection, 4));
+	
+	// rotate and translate
 	var iterations: int = 90 / rotationSpeed;
 	var xStep = (track.position.x - transform.position.x) / iterations;
 	var zStep = (track.position.z - transform.position.z) / iterations;
-	cameraTrack.pitch = 1 + ((clockDirection == CLOCKWISE) ? 0.1 : 0) + (0.1 * Random.value);
-	cameraTrack.PlayOneShot(cameraSwoop);
-	cameraTrack.pitch = 1;
-	
-	// rotate and translate
 	for (var i = 0; i < iterations; i++) {
 		transform.localEulerAngles.y += rotationSpeed * clockDirection;
 		transform.position.x += xStep;
@@ -515,7 +529,10 @@ function CrossRoads(clockDirection: int, track: Transform) {
 	}
 	
 	// finalize
-	SetTrack();
+	//TODO instead of looping over all terrain twice here, change the show terrain function to take two sets of track data, the old one and the new one, and only show those objects that should be shown
+	EnvironmentScript.ShowEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 - clockDirection, 4));
+	EnvironmentScript.HideEnvironment(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1, 4));
+	SetTrack(newTrackAxis, newTrackPosition);
 	StartListening();
 }
 
@@ -697,7 +714,7 @@ function Throw() {
 		var aimAngleRads = aimAngle * (Mathf.PI / 180);
 		throwing.velocity = 
 			this.rigidbody.velocity + 
-			(GetDirection() * aimCharge * throwSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(GetPlayerDirection() * aimCharge * throwSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
 			(aimCharge * throwSpeed * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	}
@@ -710,7 +727,7 @@ function Shoot(projectile: Rigidbody) {
 	var aimAngleRads = aimAngle * (Mathf.PI / 180);
 	instance.velocity = 
 			this.rigidbody.velocity + 
-			(GetDirection() * aimCharge * shootSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(GetPlayerDirection() * aimCharge * shootSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
 			(aimCharge * shootSpeed * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	aimCharge = minAimCharge;

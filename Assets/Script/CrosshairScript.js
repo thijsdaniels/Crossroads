@@ -23,7 +23,7 @@ function Update () {
 		
 		// make the crosshair follow the target
 		var chargedDistance = distance + aimCharge;
-		this.transform.position = targetScript.GetCarryingPosition() + (targetScript.GetDirection() * target.forward * chargedDistance * Mathf.Cos(aimAngleRads)) + (target.up * chargedDistance * Mathf.Sin(aimAngleRads));
+		this.transform.position = targetScript.GetCarryingPosition() + (targetScript.GetPlayerDirection() * target.forward * chargedDistance * Mathf.Cos(aimAngleRads)) + (target.up * chargedDistance * Mathf.Sin(aimAngleRads));
 		
 		// set the crosshair's size according to the charge of the aim
 		this.transform.localScale = Vector3.one * (aimCharge * scale);
