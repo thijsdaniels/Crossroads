@@ -5,7 +5,7 @@
 /***********/
 
 // states
-private var listening: boolean = true;
+public static var listening: boolean = true;
 private var climbing: boolean = false;
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
 private var carrying: Rigidbody;
@@ -35,12 +35,12 @@ private var contextAction: Function;
 private var contextObject: GameObject;
 
 // item slots
-private var primaryItem: Rigidbody;
-private var secondaryItem: Rigidbody;
-private var firstReserve: Rigidbody;
-private var secondReserve: Rigidbody;
-private var thirdReserve: Rigidbody;
-private var fourthReserve: Rigidbody;
+public var primaryItem: Rigidbody;
+public var secondaryItem: Rigidbody;
+public var firstReserve: Rigidbody;
+public var secondReserve: Rigidbody;
+public var thirdReserve: Rigidbody;
+public var fourthReserve: Rigidbody;
 
 // aiming
 private var aimAngle: float = 45;
@@ -51,6 +51,10 @@ private var aimChargeDuration = 1;
 // items
 public var bomb: Rigidbody;
 public var arrow: Rigidbody;
+
+// inventory
+public var inventory: GameObject;
+private var inventoryScript: InventoryScript;
 
 // audio
 public var vocalTrack: AudioSource;
@@ -71,8 +75,8 @@ private static var RIGHT = 1;
 // controller constants
 private static var BUTTON_JUMP = 'A';
 private static var BUTTON_RUN = 'Left Stick Button';
-private static var BUTTON_ITEM_PRIMARY = 'X';
-private static var BUTTON_ITEM_SECONDARY = 'Y';
+public static var BUTTON_ITEM_PRIMARY = 'X';
+public static var BUTTON_ITEM_SECONDARY = 'Y';
 private static var BUTTON_CONTEXT = 'B';
 private static var AXIS_WALK = 'Left Stick Horizontal';
 private static var AXIS_AIM = 'Left Stick Vertical';
@@ -82,9 +86,9 @@ private static var BUTTON_TURN_RIGHT = 'Right Button';
 private static var BUTTON_TURN_LEFT = 'Left Button';
 private static var AXIS_CAMERA = 'Right Stick Vertical';
 private static var BUTTON_MENU = 'Start';
-private static var BUTTON_INVENTORY = 'Back';
-private static var AXIS_RESERVE_VERTICAL = 'D-Pad Vertical';
-private static var AXIS_RESERVE_HORIZONTAL = 'D-Pad Horizontal';
+public static var BUTTON_INVENTORY = 'Back';
+public static var AXIS_RESERVE_VERTICAL = 'D-Pad Vertical';
+public static var AXIS_RESERVE_HORIZONTAL = 'D-Pad Horizontal';
 
 // debug controller constants
 private static var DEBUG_HEALTH_INCREMENT = 'Num Add';
@@ -113,9 +117,8 @@ function Start() {
 	// set the direction
 	direction = RIGHT;
 	
-	//DEBUG set the primary item for lack of a method to do so
-	firstReserve = bomb;
-	secondReserve = arrow;
+	// get a reference to the inventory
+	inventoryScript = inventory.GetComponent(InventoryScript);
 	
 }
 
@@ -143,12 +146,12 @@ function Update() {
 /**********************/
 
 // makes the player start listening
-function StartListening() {
+public static function StartListening() {
 	listening = true;
 }
 
 // makes the player stop listening
-function StopListening() {
+public static function StopListening() {
 	listening = false;
 }
 
@@ -197,16 +200,16 @@ function CheckInput() {
 			Turn(EnvironmentScript.COUNTERCLOCKWISE);
 		}
 		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) > 0) {
-			EquipPrimary(firstReserve);
+			primaryItem = firstReserve;
 		}
 		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) < 0) {
-			EquipPrimary(thirdReserve);
+			primaryItem = thirdReserve;
 		}
 		if (Input.GetAxis(AXIS_RESERVE_HORIZONTAL) > 0) {
-			EquipPrimary(secondReserve);
+			primaryItem = secondReserve;
 		}
 		if (Input.GetAxis(AXIS_RESERVE_HORIZONTAL) < 0) {
-			EquipPrimary(fourthReserve);
+			primaryItem = fourthReserve;
 		}
 	}
 	
@@ -563,10 +566,6 @@ function GetThirdReserve(): Rigidbody {
 
 function GetFourthReserve(): Rigidbody {
 	return fourthReserve;
-}
-
-function EquipPrimary(item: Rigidbody) {
-	primaryItem = item;
 }
 
 //WARNING the below three functions are just test examples using bombs

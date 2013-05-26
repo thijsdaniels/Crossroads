@@ -40,6 +40,12 @@
 ### Health System <code>done</code>
 - Copied off of Zelda, the player has a certain amount of hearts, each consisting of 4 health units.
 
+### Swimming, Digging and Flying
+Since the game is viewed entirely from the side, there is inherently an emphasis on vertical movement. Because of that, going underground, under water and into the air are big opportunities. The awesome thing is that the player can see underground and under water before he has a way to dig and swim, as the terrain slicing makes everything visible.
+- Make a way to swim and dive.
+- Make a shovel. It can dig away blocks below the player (but only designated blocks, otherwise the player could get himself stuck too easily) to reach underground caverns.
+- Make a way to fly ssb style, or at least double jump.
+
 ### Fix Player Movement
 - What is the correct way to move a rigidbody? Should it be translated, or should a force be applied? The latter seems to work better, but is still not very smooth. Or do all terrain blocks need to have a rigidbody component as well? Or a terrain-collider perhaps?
 - The player should be bound to the path. What is the best way of doing this? Probably to set a fixed height for the world (say 256 voxels) and make invisible wall colliders of 256 voxels high at the dead end of every path. The main problem that arises from this approach is that if there is a path right above a dead end, that path will be blocked by the invisible wall. This may be solved by setting the height of these invisible walls by hand, but his must be done carefully to avoid gamebreakers.
@@ -63,7 +69,7 @@
 - Make the treasure chest script.
 
 ### Items
-- Make an inventory from where the player can bind items to the d-pad and a and x buttons.
+- <code>DONE</code>Make an inventory from where the player can bind items to the d-pad and a and x buttons.
 - Make a sword.
 
 ### Enemies
