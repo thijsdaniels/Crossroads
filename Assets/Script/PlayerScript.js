@@ -9,17 +9,19 @@ public static var listening: boolean = true;
 private var climbing: boolean = false;
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
 private var carrying: Rigidbody;
+private var swimming: boolean = false;
+private var swimScript: SwimScript;
 
 // speeds
-public var maxSpeed: float = 7.5;
-public var jumpSpeed: float = 7.5;
+public var maxSpeed: float = 8;
+public var jumpForce: float = 400;
 public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
 public var climbSpeed: float = 5;
 public var throwSpeed: float = 10;
 public var shootSpeed: float = 40;
 public var accelerationSpeed: float = 40;
 
-// mechanics
+// land mechanics
 private var direction: int;
 private var directionMargin: float = 0.8;
 private var verticalBounds: float;
@@ -119,6 +121,9 @@ function Start() {
 	
 	// get a reference to the inventory
 	inventoryScript = inventory.GetComponent(InventoryScript);
+	
+	// get a reference to the swimming script
+	swimScript = gameObject.GetComponent(SwimScript);
 	
 }
 
@@ -327,8 +332,8 @@ function Move(movement: float) {
 
 // makes the player jump if it is on the ground
 function Jump() {
-	if (IsGrounded()) {
-		rigidbody.velocity.y += jumpSpeed;
+	if (IsGrounded() || swimScript.IsFloating()) {
+		rigidbody.AddForce(Vector3.up * jumpForce * rigidbody.mass);
 		vocalTrack.PlayOneShot(playerJump);
 	}
 }
@@ -572,7 +577,7 @@ function GetFourthReserve(): Rigidbody {
 //TODO move the below three functions to each item's main script
 
 function ItemPress(item: Rigidbody) {
-	if (!IsCarrying()) {
+	if (!swimScript.IsSwimming() && !IsCarrying()) {
 		if (item == bomb) {
 			var instance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
 			PickUp(instance);
@@ -581,17 +586,21 @@ function ItemPress(item: Rigidbody) {
 }
 
 function ItemHold(item: Rigidbody) {
-	if (item == bomb || item == arrow) {
-		ChargeAim();
+	if (!swimScript.IsSwimming()) {
+		if (item == bomb || item == arrow) {
+			ChargeAim();
+		}
 	}
 }
 
 function ItemRelease(item: Rigidbody) {
-	if (item == bomb) {
-		Throw();
-	}
-	else if (item == arrow) {
-		Shoot(item);
+	if (!swimScript.IsSwimming()) {
+		if (item == bomb) {
+			Throw();
+		}
+		else if (item == arrow) {
+			Shoot(item);
+		}
 	}
 }
 
@@ -731,3 +740,8 @@ function Shoot(projectile: Rigidbody) {
 		vocalTrack.PlayOneShot(playerThrow);
 	aimCharge = minAimCharge;
 }
+
+/*************************
+ ** SWIMMING AND DIVING **
+ *************************/
+

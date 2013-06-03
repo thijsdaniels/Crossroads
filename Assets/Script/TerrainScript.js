@@ -1,25 +1,41 @@
 #pragma strict
 
 // globals
+public static var blocks: GameObject[];
+public static var blockCount: int;
 public static var terrain: GameObject[,,];
-public static var numBlocks: int;
 public static var terrainSize: Vector3;
 public static var terrainOffset: Vector3;
 
+// materials
+var ground_top: Material;
+var ground_side_top: Material;
+var ground_side: Material;
+var ground_bottom: Material;
+
 function Start() {
-	
+	GetBlocks();
 	AlignBlocks();
-	PopulateTerrainArray();
-	GenerateTerrainGeometry();
-	
+	IndexBlocks();
+	GenerateBlocks();
+	CombineBlocks();
 }
 
 function Update() {
-	
+}
+
+function GetBlocks() {
+	var i: int = 0;
+	blocks = new GameObject[transform.childCount];
+	for (var child: Transform in transform) {
+		blocks[i] = child.gameObject;
+		i++;
+	}
+	blockCount = blocks.Length;
+	Debug.Log('CHUNK NOTICE: Found ' + blockCount + ' blocks.');
 }
 
 function AlignBlocks() {
-	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Voxel');
 	for (var i = 0; i < blocks.Length; i++) {
 		blocks[i].transform.position.x = Mathf.Round(blocks[i].transform.position.x);
 		blocks[i].transform.position.y = Mathf.Round(blocks[i].transform.position.y);
@@ -27,9 +43,8 @@ function AlignBlocks() {
 	}
 }
 
-function PopulateTerrainArray() {
-	var blocks: GameObject[] = GameObject.FindGameObjectsWithTag('Voxel');
-	GetTerrainSize(blocks);
+function IndexBlocks() {
+	GetTerrainSize();
 	terrain = new GameObject[terrainSize.x, terrainSize.y, terrainSize.z];
 	for (var i = 0; i < blocks.Length; i++) {
 		AddBlock(blocks[i]);
@@ -37,7 +52,7 @@ function PopulateTerrainArray() {
 	DoubleCheck();
 }
 
-function GetTerrainSize(blocks: GameObject[]) {
+function GetTerrainSize() {
 	
 	// initialize boundaries using the first block
 	var minX: int = blocks[0].transform.position.x;
@@ -58,7 +73,6 @@ function GetTerrainSize(blocks: GameObject[]) {
 	}
 	
 	// set global variables
-	numBlocks = blocks.Length;
 	terrainSize =  Vector3(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
 	terrainOffset = Vector3(minX, minY, minZ);
 	
@@ -66,13 +80,13 @@ function GetTerrainSize(blocks: GameObject[]) {
 
 function AddBlock(block: GameObject) {
 	var position = Normalize(block.transform.position);
-	if (terrain[position.x, position.y, position.z] != null) Debug.Log('TERRAIN WARNING: Duplicate Block found at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
+	if (terrain[position.x, position.y, position.z] != null) Debug.Log('CHUNK WARNING: Duplicate Block found at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
 	terrain[position.x, position.y, position.z] = block;
 }
 
 function RemoveBlock(block: GameObject) {
 	var position = Normalize(block.transform.position);
-	if (terrain[position.x, position.y, position.z] == null) Debug.Log('TERRAIN WARNING: Attempt to remove non-existing Block at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
+	if (terrain[position.x, position.y, position.z] == null) Debug.Log('CHUNK WARNING: Attempt to remove non-existing Block at [' + block.transform.position.x + ',' + block.transform.position.y + ',' + block.transform.position.z + ']');
 	terrain[position.x, position.y, position.z] = null;
 }
 
@@ -119,15 +133,15 @@ function DoubleCheck() {
 			}
 		}
 	}
-	if (blocks == numBlocks) {
-		Debug.Log('Terrain conversion completed succesfully (' + blocks + ' blocks).');
+	if (blocks == blockCount) {
+		Debug.Log('CHUNK NOTICE: Indexing completed succesfully.');
 	} else {
-		var mismatch: int = numBlocks - blocks;
-		Debug.Log('Terrain mismatch! ' + mismatch + ' out of ' + numBlocks + ' blocks were not added.');
+		var mismatch: int = blockCount - blocks;
+		Debug.Log('CHUNK WARNING: ' + mismatch + ' out of ' + blockCount + ' blocks were not added!');
 	}
 }
 
-function GenerateTerrainGeometry() {
+function GenerateBlocks() {
 	var hullBlocks = 0;
 	for (var x = 0; x < terrainSize.x; x++) {
 		for (var y = 0; y < terrainSize.y; y++) {
@@ -138,13 +152,13 @@ function GenerateTerrainGeometry() {
 						DisableBlock(block);
 						hullBlocks++;
 					} else {
-						//GenerateMesh(block, Vector3(x, y, z));
+						GenerateMesh(block, Vector3(x, y, z));
 					}
 				}
 			}
 		}
 	}
-	Debug.Log(hullBlocks + ' Hull Blocks were disabled.');
+	Debug.Log('CHUNK NOTICE: ' + hullBlocks + ' Hull Blocks were disabled.');
 }
 
 function IsHull(block: GameObject, position: Vector3): boolean {
@@ -172,79 +186,84 @@ function DisableBlock(block: GameObject) {
 
 function GenerateMesh(block: GameObject, position: Vector3) {
 	
+	// clear old mesh
 	var meshFilter: MeshFilter = block.GetComponent(MeshFilter);
 	meshFilter.mesh.Clear();
 	
-	var mesh: Mesh = new Mesh();
+	// make vertices
+	var size = 0.5;
+    var vertices = [
+        Vector3(-size, -size, -size),
+        Vector3(-size,  size, -size),
+        Vector3( size,  size, -size),
+        Vector3( size, -size, -size),
+        Vector3( size, -size,  size),
+        Vector3( size,  size,  size),
+        Vector3(-size,  size,  size),
+        Vector3(-size, -size,  size)
+    ]; 
+    
+    // make triangles
+    var top_triangles = [
+		5, 2, 1,
+		5, 1, 6
+    ];
+    var back_triangles = [
+		0, 1, 3,
+		1, 2, 3
+	];
+	var left_triangles = [
+		0, 7, 6,
+		0, 6, 1
+	];
+	var front_triangles = [
+		4, 5, 6,
+		4, 6, 7
+	];
+	var right_triangles = [
+		3, 2, 5,
+		3, 5, 4
+	];
+	var bottom_triangles = [
+		3, 4, 7,
+		3, 7, 0
+    ];
 	
-	if (!CheckBlock(position + Vector3.up)) {
-		
-		var top_vertices: Vector3[] = new Vector3[4];
-		top_vertices[0] = new Vector3(-0.5, 0.5, -0.5);
-		top_vertices[1] = new Vector3(0.5, 0.5, -0.5);
-		top_vertices[2] = new Vector3(-0.5, 0.5, 0.5);
-		top_vertices[3] = new Vector3(0.5, 0.5, 0.5);
-		mesh.vertices += top_vertices;
-		
-		var top_triangles: int[] = new int[6];
-		top_triangles[0] = 0;
-		top_triangles[1] = 2;
-		top_triangles[2] = 1;
-		top_triangles[3] = 2;
-		top_triangles[4] = 3;
-		top_triangles[5] = 1;
-		mesh.triangles += top_triangles;
-		
-		var top_normals: Vector3[] = new Vector3[4];
-		top_normals[0] = Vector3.down;
-		top_normals[1] = Vector3.down;
-		top_normals[2] = Vector3.down;
-		top_normals[3] = Vector3.down;
-		mesh.normals += top_normals;
-		
-		var top_uv: Vector2[] = new Vector2[4];
-		top_uv[0] = new Vector2(0, 0);
-		top_uv[1] = new Vector2(1, 0);
-		top_uv[2] = new Vector2(0, 1);
-		top_uv[3] = new Vector2(1, 1);
-		mesh.uv += top_uv;
+	// generate uvs
+	var uv: Vector2[] = new Vector2[vertices.Length];
+    for (var j = 0; j < uv.Length; j++) {
+    	uv[j] = Vector2(vertices[j].x * 0.5, vertices[j].z * 0.5);
+    }
 
-	}
-	
-	if (!CheckBlock(position + Vector3.back)) {
-		
-		var front_vertices: Vector3[] = new Vector3[4];
-		front_vertices[0] = new Vector3(-0.5, 0.5, -0.5);
-		front_vertices[1] = new Vector3(0.5, 0.5, -0.5);
-		front_vertices[2] = new Vector3(-0.5, -0.5, -0.5);
-		front_vertices[3] = new Vector3(0.5, -0.5, -0.5);
-		mesh.vertices += front_vertices;
-		
-		var front_triangles: int[] = new int[6];
-		front_triangles[0] = 0;
-		front_triangles[1] = 2;
-		front_triangles[2] = 1;
-		front_triangles[3] = 2;
-		front_triangles[4] = 3;
-		front_triangles[5] = 1;
-		mesh.triangles += front_triangles;
-		
-		var front_normals: Vector3[] = new Vector3[4];
-		front_normals[0] = Vector3.down;
-		front_normals[1] = Vector3.down;
-		front_normals[2] = Vector3.down;
-		front_normals[3] = Vector3.down;
-		mesh.normals += front_normals;
-		
-		var front_uv: Vector2[] = new Vector2[4];
-		front_uv[0] = new Vector2(0, 0);
-		front_uv[1] = new Vector2(1, 0);
-		front_uv[2] = new Vector2(0, 1);
-		front_uv[3] = new Vector2(1, 1);
-		mesh.uv += front_uv;
+	// set materials
+	var side_material = (CheckBlock(position + Vector3.up)) ? ground_side : ground_side_top;
+	block.renderer.materials = [
+		 ground_top,
+		 side_material,
+		 side_material,
+		 side_material,
+		 side_material,
+		 ground_bottom
+	];
 
-	}
+	// build new mesh
+	var mesh = new Mesh();
+    mesh.subMeshCount = 6;
+    mesh.vertices = vertices;
+	if (!CheckBlock(position + Vector3.up)) mesh.SetTriangles(top_triangles, 0);
+	if (!CheckBlock(position + Vector3.back)) mesh.SetTriangles(back_triangles, 1);
+	if (!CheckBlock(position + Vector3.left)) mesh.SetTriangles(left_triangles, 2);
+	if (!CheckBlock(position + Vector3.forward)) mesh.SetTriangles(front_triangles, 3);
+	if (!CheckBlock(position + Vector3.right)) mesh.SetTriangles(right_triangles, 4);
+	if (!CheckBlock(position + Vector3.down)) mesh.SetTriangles(bottom_triangles, 5);
+    mesh.uv = uv;
+	mesh.RecalculateNormals();
+    
+    // set mesh
+    meshFilter.mesh = mesh;
 	
-	meshFilter.mesh = mesh;
+}
+
+function CombineBlocks() {
 	
 }

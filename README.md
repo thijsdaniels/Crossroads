@@ -45,6 +45,7 @@ Since the game is viewed entirely from the side, there is inherently an emphasis
 - Make a way to swim and dive.
 - Make a shovel. It can dig away blocks below the player (but only designated blocks, otherwise the player could get himself stuck too easily) to reach underground caverns.
 - Make a way to fly ssb style, or at least double jump.
+- Maybe even make a place higher than the sky land that is in space with zero-g? For example you wouldnt be able to do anything there untill you have the iron boots that also make you sink, but here give you gravity.
 
 ### Fix Player Movement
 - What is the correct way to move a rigidbody? Should it be translated, or should a force be applied? The latter seems to work better, but is still not very smooth. Or do all terrain blocks need to have a rigidbody component as well? Or a terrain-collider perhaps?

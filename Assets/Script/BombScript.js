@@ -1,7 +1,7 @@
 #pragma strict
 
 public var damage: int = 6;
-public var force: float = 5000;
+public var force: float = 50;
 public var radius: float = 5;
 public var fuseLength: float = 5;
 public var explosion: Transform;
