@@ -49,6 +49,7 @@
      <Compile Include="Assets\Script\BombScript.js" />
      <Compile Include="Assets\Script\ButtonScript.js" />
      <Compile Include="Assets\Script\CameraScript.js" />
+     <Compile Include="Assets\Script\ChunkScript.js" />
      <Compile Include="Assets\Script\CrosshairScript.js" />
      <Compile Include="Assets\Script\EnvironmentScript.js" />
      <Compile Include="Assets\Script\HUDScript.js" />
@@ -56,6 +57,7 @@
      <Compile Include="Assets\Script\InventoryScript.js" />
      <Compile Include="Assets\Script\ItemScript.js" />
      <Compile Include="Assets\Script\MiniMapScript.js" />
+     <Compile Include="Assets\Script\OldTerrainScript.js" />
      <Compile Include="Assets\Script\OrbitScript.js" />
      <Compile Include="Assets\Script\PlayerScript.js" />
      <Compile Include="Assets\Script\SunScript.js" />

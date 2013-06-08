@@ -4,9 +4,15 @@
 
 # Task List <code>Demo Alpha Version</code>
 
+## SHORT TERM
+- Check and clean up voxel engine code.
+- Reinvent terrain slicing.
+- Add texture support to voxel engine.
+- Add multiple material support to voxel engine.
+
 ## Voxel-Engine
-- Make chunks that each contain a certain number of terrain voxels.
-- Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
+- <code>DONE</code>Make chunks that each contain a certain number of terrain voxels.
+- <code>DONE</code>Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
 - Each terrain voxel should call a re-render of its chunk when it is destroyed or created.
 - <code>DONE</code>The terrain (and other relevant game objects) that are on the camera-side of the player will be disabled, with the exception of the row right in front of the player. This way, nothing unintentionally blocks the view and things like treasure chests and NPCs, which must be in the rows adjacent to the player's track anyway, will still be visible.
 

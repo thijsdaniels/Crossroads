@@ -1,8 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Script\TerrainScript.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Script\EnvironmentScript.js">
     <Files>
-      <File FileName="Assets\Script\TerrainScript.js" Line="155" Column="7" />
+      <File FileName="Assets\Script\BlockScript.js" Line="1" Column="1" />
+      <File FileName="Assets\Script\ChunkScript.js" Line="30" Column="33" />
+      <File FileName="Assets\Script\TerrainScript.js" Line="97" Column="15" />
+      <File FileName="Assets\Script\PlayerScript.js" Line="1" Column="1" />
+      <File FileName="Assets\Script\EnvironmentScript.js" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
