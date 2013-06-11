@@ -122,3 +122,18 @@ function CreateChunks() {
 		}
 	}
 }
+
+public static function HideTerrain(axis: int, position: int, direction: int) {
+	for (var chunk: GameObject in CHUNKS) {
+		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
+		if (axis == EnvironmentScript.X_AXIS) {
+			if (position >= chunk.transform.position.z && position <= chunk.transform.position.z + ChunkScript.CHUNK_SIZE) {
+				chunkScript.HideBlocks(axis, position, direction);
+			}
+		} else {
+			if (position >= chunk.transform.position.x && position <= chunk.transform.position.x + ChunkScript.CHUNK_SIZE) {
+				chunkScript.HideBlocks(axis, position, direction);
+			}
+		}
+	}
+}

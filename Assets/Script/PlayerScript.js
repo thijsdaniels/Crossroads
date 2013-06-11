@@ -113,7 +113,7 @@ function Start() {
 	var playerAxisPosition = GetAxisPosition(playerAxis, this.transform);
 	SetTrack(playerAxis, playerAxisPosition);
 	
-	// hide the terrain
+	// hide the environment
 	EnvironmentScript.HideEnvironment(GetTrackAxis(), GetTrackPosition(), EnvironmentScript.NORTH);
 	
 	// set the direction

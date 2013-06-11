@@ -51,6 +51,9 @@ function InRange(position: Vector3): boolean {
 // renders the chunk
 public function Render() {
 
+	if (meshFilter.mesh) meshFilter.mesh.Clear();
+	if (meshCollider.mesh) meshCollider.mesh.Clear();
+
 	// generate vertices and triangles
 	var vertices = new Array();
 	var triangles = new Array();
@@ -197,6 +200,38 @@ public function Render() {
 	meshCollider.mesh = mesh;
 }
 
+public function HideBlocks(axis: int, position: int, direction: int) {
+	for (var x = 0; x < CHUNK_SIZE; x++) {
+		for (var y = 0; y < CHUNK_SIZE; y++) {
+			for (var z = 0; z < CHUNK_SIZE; z++) {
+				var block: Block = blocks[x, y, z];
+				if (axis == EnvironmentScript.X_AXIS) {
+					if (direction == EnvironmentScript.NORTH) {
+						if (z < position - EnvironmentScript.TRACK_MARGIN) {
+							block.SetActive(false);
+						}
+					} else if (direction == EnvironmentScript.SOUTH) {
+						if (z > position + EnvironmentScript.TRACK_MARGIN) {
+							block.SetActive(false);
+						}
+					}
+				} else {
+					if (direction == EnvironmentScript.EAST) {
+						if (x < position - EnvironmentScript.TRACK_MARGIN) {
+							block.SetActive(false);
+						}
+					} else if (direction == EnvironmentScript.WEST) {
+						if (x > position + EnvironmentScript.TRACK_MARGIN) {
+							block.SetActive(false);
+						}
+					}
+				}
+			}
+		}
+	}
+	Render();
+}
+
 // checks whether a space is occupied
 public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boolean {
 	
@@ -255,7 +290,7 @@ class Block {
 	public function SetType(_type: int) {
 		type = _type;
 	}
-	public function IsActive(_active: boolean) {
+	public function SetActive(_active: boolean) {
 		active = _active;
 	}
 }

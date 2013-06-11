@@ -11,7 +11,7 @@ public static var CLOCKWISE: int = -1;
 public static var COUNTERCLOCKWISE: int = 1;
 
 // track constants
-private static var TRACK_MARGIN: float = 1.5;
+public static var TRACK_MARGIN: float = 1.5;
 
 // layer constants
 private static var LAYER_ENVIRONMENT = 11;
@@ -62,6 +62,8 @@ public static function HideEnvironment(axis: int, position: int, direction: int)
 			}
 		}
 	}
+	
+	TerrainScript.HideTerrain(axis, position, direction);
 }
 
 public static function ShowEnvironment(axis: int, position: int, direction: int) {
