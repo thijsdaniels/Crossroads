@@ -200,36 +200,73 @@ public function Render() {
 	meshCollider.mesh = mesh;
 }
 
-public function HideBlocks(axis: int, position: int, direction: int) {
+public function Slice(axis: int, position: int, direction: int) {
+	var different = false;
 	for (var x = 0; x < CHUNK_SIZE; x++) {
 		for (var y = 0; y < CHUNK_SIZE; y++) {
 			for (var z = 0; z < CHUNK_SIZE; z++) {
 				var block: Block = blocks[x, y, z];
-				if (axis == EnvironmentScript.X_AXIS) {
-					if (direction == EnvironmentScript.NORTH) {
-						if (z < position - EnvironmentScript.TRACK_MARGIN) {
-							block.SetActive(false);
+				if (block != null) {
+					if (axis == EnvironmentScript.X_AXIS) {
+						if (direction == EnvironmentScript.NORTH) {
+							if (transform.position.z + z < position - EnvironmentScript.TRACK_MARGIN) {
+								if (block.IsActive()) {
+									block.SetActive(false);
+									different = true;
+								}
+							} else {
+								if (!block.IsActive()) {
+									block.SetActive(true);
+									different = true;
+								}
+							}
+						} else if (direction == EnvironmentScript.SOUTH) {
+							if (transform.position.z + z > position + EnvironmentScript.TRACK_MARGIN) {
+								if (block.IsActive()) {
+									block.SetActive(false);
+									different = true;
+								}
+							} else {
+								if (!block.IsActive()) {
+									block.SetActive(true);
+									different = true;
+								}
+							}
 						}
-					} else if (direction == EnvironmentScript.SOUTH) {
-						if (z > position + EnvironmentScript.TRACK_MARGIN) {
-							block.SetActive(false);
-						}
-					}
-				} else {
-					if (direction == EnvironmentScript.EAST) {
-						if (x < position - EnvironmentScript.TRACK_MARGIN) {
-							block.SetActive(false);
-						}
-					} else if (direction == EnvironmentScript.WEST) {
-						if (x > position + EnvironmentScript.TRACK_MARGIN) {
-							block.SetActive(false);
+					} else {
+						if (direction == EnvironmentScript.EAST) {
+							if (transform.position.x + x < position - EnvironmentScript.TRACK_MARGIN) {
+								if (block.IsActive()) {
+									block.SetActive(false);
+									different = true;
+								}
+							} else {
+								if (!block.IsActive()) {
+									block.SetActive(true);
+									different = true;
+								}
+							}
+						} else if (direction == EnvironmentScript.WEST) {
+							if (transform.position.x + x > position + EnvironmentScript.TRACK_MARGIN) {
+								if (block.IsActive()) {
+									block.SetActive(false);
+									different = true;
+								}
+							} else {
+								if (!block.IsActive()) {
+									block.SetActive(true);
+									different = true;
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	Render();
+	if (different) {
+		Render();
+	}
 }
 
 // checks whether a space is occupied

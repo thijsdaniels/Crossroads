@@ -16,14 +16,14 @@ function Start () {
 }
 
 function Update () {
-
 }
 
 function PrepareTerrain() {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
 	
 	// initialize block array
 	BLOCKS = new GameObject[transform.childCount];
-	Debug.Log('FOUND ' + BLOCKS.Length + ' BLOCKS');
 	
 	// initialize terrain boundaries
 	var minX: int = 0;
@@ -55,11 +55,15 @@ function PrepareTerrain() {
 	// store terrain boundaries
 	TERRAIN_SIZE =  Vector3(maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
 	TERRAIN_OFFSET = Vector3(minX, minY, minZ);
-	
-	Debug.Log('TERRAIN SIZE: ' + TERRAIN_SIZE + ' TERRAIN_OFFSET: ' + TERRAIN_OFFSET);
+
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Prepared ' + BLOCKS.Length + ' Blocks in ' + startTime.ToString('f0') + ' milliseconds.');
+
 }
 
 function IndexTerrain() {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
 	
 	// build terrain
 	TERRAIN = new int[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
@@ -68,7 +72,7 @@ function IndexTerrain() {
 		// get block position
 		var block = BLOCKS[i];
 		var index = Position2Index(block.transform.position);
-		if (TERRAIN[index.x, index.y, index.z] != 0) Debug.Log('CHUNK WARNING: Duplicate Block found at ' + block.transform.position);
+		if (TERRAIN[index.x, index.y, index.z] != 0) Debug.LogWarning('TERRAIN: Duplicate Block found at ' + block.transform.position);
 		
 		//get block type
 		//var blockScript: BlockScript = block.GetComponent(BlockScript);
@@ -78,14 +82,23 @@ function IndexTerrain() {
 		// store block type at block index
 		TERRAIN[index.x, index.y, index.z] = type;
 	}
+
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Indexed terrain in ' + processingTime.ToString('f0') + ' milliseconds.');
 	
 }
 
 function UnsetTerrain() {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
+
 	for (var i: int = 0; i < BLOCKS.Length; i++) {
 		Destroy(BLOCKS[i]);
 	}
 	BLOCKS = null;
+
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Unset terrain in ' + processingTime.ToString('f0') + ' milliseconds.');
 }
 
 // converts a worldspace coordinate to a terrain index
@@ -100,6 +113,8 @@ public static function Index2Position(index: Vector3): Vector3 {
 
 // builds chunks using the terrain array
 function CreateChunks() {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
 
 	// calculate the number of chunks
 	var worldSize = Vector3(Mathf.Ceil(TERRAIN_SIZE.x / ChunkScript.CHUNK_SIZE), Mathf.Ceil(TERRAIN_SIZE.y / ChunkScript.CHUNK_SIZE), Mathf.Ceil(TERRAIN_SIZE.z / ChunkScript.CHUNK_SIZE));
@@ -121,19 +136,21 @@ function CreateChunks() {
 			}
 		}
 	}
+
+	var numChunks = worldSize.x * worldSize.y * worldSize.z;
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Built ' + numChunks + ' Chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
 }
 
-public static function HideTerrain(axis: int, position: int, direction: int) {
+public static function Slice(axis: int, position: int, direction: int) {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
+
 	for (var chunk: GameObject in CHUNKS) {
 		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
-		if (axis == EnvironmentScript.X_AXIS) {
-			if (position >= chunk.transform.position.z && position <= chunk.transform.position.z + ChunkScript.CHUNK_SIZE) {
-				chunkScript.HideBlocks(axis, position, direction);
-			}
-		} else {
-			if (position >= chunk.transform.position.x && position <= chunk.transform.position.x + ChunkScript.CHUNK_SIZE) {
-				chunkScript.HideBlocks(axis, position, direction);
-			}
-		}
+		chunkScript.Slice(axis, position, direction);
 	}
+
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Hid terrain in ' + processingTime.ToString('f0') + ' milliseconds.');
 }

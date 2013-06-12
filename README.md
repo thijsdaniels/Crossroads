@@ -7,6 +7,8 @@
 ## SHORT TERM
 - Check and clean up voxel engine code.
 - Reinvent terrain slicing.
+  x After hiding normal objects as usual, iterate over all chunks and rebuild them.
+  - Instead of destroying the mesh of chunks that should be hidden but that are not intersecting the track, just set their renderer to false.
 - Add texture support to voxel engine.
 - Add multiple material support to voxel engine.
 

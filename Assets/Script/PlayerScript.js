@@ -114,7 +114,7 @@ function Start() {
 	SetTrack(playerAxis, playerAxisPosition);
 	
 	// hide the environment
-	EnvironmentScript.HideEnvironment(GetTrackAxis(), GetTrackPosition(), EnvironmentScript.NORTH);
+	EnvironmentScript.Slice(GetTrackAxis(), GetTrackPosition(), EnvironmentScript.NORTH);
 	
 	// set the direction
 	direction = RIGHT;
@@ -499,7 +499,7 @@ function UTurn(clockDirection: int) {
 	cameraTrack.pitch = 1 - ((clockDirection == EnvironmentScript.CLOCKWISE) ? 0.1 : 0) - (0.1 * Random.value);
 	cameraTrack.PlayOneShot(cameraSwoop);
 	cameraTrack.pitch = 1;
-	EnvironmentScript.HideEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 + 2, 4));
+	EnvironmentScript.Slice(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 + 2, 4));
 	
 	// rotate
 	for (var i = 0; i < iterations; i++) {
@@ -508,7 +508,6 @@ function UTurn(clockDirection: int) {
 	}
 	
 	// finalize
-	EnvironmentScript.ShowEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 - 2, 4));
 	StartListening();
 }
 
@@ -523,7 +522,7 @@ function CrossRoads(clockDirection: int, track: Transform) {
 	cameraTrack.pitch = 1;
 	var newTrackAxis = GetPerpendicularAxis(GetTrackAxis());
 	var newTrackPosition = GetAxisPosition(newTrackAxis, track);
-	EnvironmentScript.HideEnvironment(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1 + clockDirection, 4));
+	EnvironmentScript.Slice(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1 + clockDirection, 4));
 	
 	// rotate and translate
 	var iterations: int = 90 / rotationSpeed;
@@ -537,9 +536,6 @@ function CrossRoads(clockDirection: int, track: Transform) {
 	}
 	
 	// finalize
-	//TODO instead of looping over all terrain twice here, change the show terrain function to take two sets of track data, the old one and the new one, and only show those objects that should be shown
-	EnvironmentScript.ShowEnvironment(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 - clockDirection, 4));
-	EnvironmentScript.HideEnvironment(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1, 4));
 	SetTrack(newTrackAxis, newTrackPosition);
 	StartListening();
 }

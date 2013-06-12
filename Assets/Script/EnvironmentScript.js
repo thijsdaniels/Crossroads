@@ -26,71 +26,74 @@ function Update () {
 }
 
 private static function Hide(object: GameObject) {
-	if (object.layer == LAYER_ENVIRONMENT) {
-		object.layer = LAYER_ENVIRONMENT_HIDDEN;
+
+	if (object.GetComponent(Renderer) != null) {
+		if (object.renderer.enabled) {
+			object.renderer.enabled = false;
+		}
 	}
+
+	for (var child: Transform in object.transform) {
+		Hide(child.gameObject);
+	}
+
+	//if (object.layer == LAYER_ENVIRONMENT) {
+		//object.layer = LAYER_ENVIRONMENT_HIDDEN;
+	//}
 }
 
 private static function Show(object: GameObject) {
-	if (object.layer == LAYER_ENVIRONMENT_HIDDEN) {
-		object.layer = LAYER_ENVIRONMENT;
+
+	if (object.GetComponent(Renderer) != null) {
+		if (!object.renderer.enabled) {
+			object.renderer.enabled = true;
+		}
 	}
+
+	for (var child: Transform in object.transform) {
+		Show(child.gameObject);
+	}
+
+	//if (object.layer == LAYER_ENVIRONMENT_HIDDEN) {
+		//object.layer = LAYER_ENVIRONMENT;
+	//}
 }
 
-public static function HideEnvironment(axis: int, position: int, direction: int) {
-	var visible_environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT);
-	for (var object: GameObject in visible_environment) {
+public static function Slice(axis: int, position: int, direction: int) {
+	var environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT);
+	for (var object: GameObject in environment) {
 		if (axis == X_AXIS) {
 			if (direction == NORTH) {
 				if (object.transform.position.z < position - TRACK_MARGIN) {
 					Hide(object);
+				} else {
+					Show(object);
 				}
 			} else if (direction == SOUTH) {
 				if (object.transform.position.z > position + TRACK_MARGIN) {
 					Hide(object);
+				} else {
+					Show(object);
 				}
 			}
 		} else {
 			if (direction == EAST) {
 				if (object.transform.position.x < position - TRACK_MARGIN) {
 					Hide(object);
+				} else {
+					Show(object);
 				}
 			} else if (direction == WEST) {
 				if (object.transform.position.x > position + TRACK_MARGIN) {
 					Hide(object);
+				} else {
+					Show(object);
 				}
 			}
 		}
 	}
 	
-	TerrainScript.HideTerrain(axis, position, direction);
-}
-
-public static function ShowEnvironment(axis: int, position: int, direction: int) {
-	var hidden_environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT_HIDDEN);
-	for (var object: GameObject in hidden_environment) {
-		if (axis == X_AXIS) {
-			if (direction == NORTH) {
-				if (object.transform.position.z < position - TRACK_MARGIN) {
-					Show(object);
-				}
-			} else if (direction == SOUTH) {
-				if (object.transform.position.z > position + TRACK_MARGIN) {
-					Show(object);
-				}
-			}
-		} else {
-			if (direction == EAST) {
-				if (object.transform.position.x < position - TRACK_MARGIN) {
-					Show(object);
-				}
-			} else if (direction == WEST) {
-				if (object.transform.position.x > position + TRACK_MARGIN) {
-					Show(object);
-				}
-			}
-		}
-	}
+	TerrainScript.Slice(axis, position, direction);
 }
 
 private static function FindGameObjectsInLayer(layer: int): GameObject[] {
