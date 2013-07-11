@@ -60,6 +60,11 @@ private static function Show(object: GameObject) {
 }
 
 public static function Slice(axis: int, position: int, direction: int) {
+
+	// first slice the terrain
+	TerrainScript.Slice(axis, position, direction);
+
+	// then slice the environment
 	var environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT);
 	for (var object: GameObject in environment) {
 		if (axis == X_AXIS) {
@@ -92,8 +97,6 @@ public static function Slice(axis: int, position: int, direction: int) {
 			}
 		}
 	}
-	
-	TerrainScript.Slice(axis, position, direction);
 }
 
 private static function FindGameObjectsInLayer(layer: int): GameObject[] {

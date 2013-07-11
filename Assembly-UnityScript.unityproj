@@ -57,7 +57,6 @@
      <Compile Include="Assets\Script\InventoryScript.js" />
      <Compile Include="Assets\Script\ItemScript.js" />
      <Compile Include="Assets\Script\MiniMapScript.js" />
-     <Compile Include="Assets\Script\OldTerrainScript.js" />
      <Compile Include="Assets\Script\OrbitScript.js" />
      <Compile Include="Assets\Script\PlayerScript.js" />
      <Compile Include="Assets\Script\SunScript.js" />

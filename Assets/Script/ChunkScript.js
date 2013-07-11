@@ -232,7 +232,7 @@ public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boole
 // SLICING //
 /////////////
 
-public function GetSlicePosition(axis: int, position: int, direction: int) {
+public function GetSlicePosition(axis: int, position: int, direction: int): int {
 
 	// determine which coordinate of the chunk's position to evaluate
 	var chunkPosition: float;
@@ -249,12 +249,13 @@ public function GetSlicePosition(axis: int, position: int, direction: int) {
 		}
 	}
 
-	if (position > chunkPosition) {
-		if (position < chunkPosition + CHUNK_SIZE) {
+	if (position >= chunkPosition) {
+		if (position <= chunkPosition + CHUNK_SIZE) {
 			return INTERSECT;
 		}
 		return (reverseDirection) ? BEHIND : AHEAD;
 	}
+	return (reverseDirection) ? AHEAD : BEHIND;
 }
 
 public function Slice(axis: int, position: int, direction: int) {
@@ -339,6 +340,21 @@ public function Show() {
 	}
 }
 
+public function ShowAll() {
+	for (var x = 0; x < CHUNK_SIZE; x++) {
+		for (var y = 0; y < CHUNK_SIZE; y++) {
+			for (var z = 0; z < CHUNK_SIZE; z++) {
+				var block: Block = blocks[x, y, z];
+				if (block != null) {
+					block.SetActive(true);
+				}
+			}
+		}
+	}
+	Render();
+	Show();
+}
+
 ////////////
 // BLOCKS //
 ////////////
@@ -346,7 +362,7 @@ public function Show() {
 class Block {
 
 	// constants
-	public static var BLOCKSIZE: float = 0.5;
+	final public static var BLOCKSIZE: float = 0.5;
 	public static class BLOCKTYPE {
 		public var GRASS: int = 1;
 		public var DIRT: int = 2;

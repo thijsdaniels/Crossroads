@@ -1,7 +1,7 @@
 #pragma strict
 /* This sript cooperates with the main player script to update
  * the elements of the user interface. As such, it forms the link
- * between the player and the UI. */
+ * between the Player and the UI. */
 
 // player
 private var player: PlayerScript;

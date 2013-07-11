@@ -164,7 +164,7 @@ public static function Slice(axis: int, position: int, direction: int) {
 		
 		// else, if the chunk is behind the track, show it
 		else if (chunkPosition == ChunkScript.BEHIND) {
-			chunkScript.Show();
+			chunkScript.ShowAll();
 		}
 	}
 

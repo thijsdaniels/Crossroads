@@ -1,8 +1,41 @@
 #pragma strict
 
-/***********/
-/* GLOBALS */
-/***********/
+///////////////////////////////
+////////// CONSTANTS //////////
+///////////////////////////////
+
+// direction
+private static var LEFT = -1;
+private static var RIGHT = 1;
+
+// controller constants
+private static var BUTTON_JUMP = 'A';
+private static var BUTTON_RUN = 'Left Stick Button';
+public static var BUTTON_ITEM_PRIMARY = 'X';
+public static var BUTTON_ITEM_SECONDARY = 'Y';
+private static var BUTTON_CONTEXT = 'B';
+private static var AXIS_WALK = 'Left Stick Horizontal';
+private static var AXIS_AIM = 'Left Stick Vertical';
+private static var AXIS_CLIMB = 'Left Stick Vertical';
+private static var AXIS_TURN = 'Right Stick Horizontal';
+private static var BUTTON_TURN_RIGHT = 'Right Button';
+private static var BUTTON_TURN_LEFT = 'Left Button';
+private static var AXIS_CAMERA = 'Right Stick Vertical';
+private static var BUTTON_MENU = 'Start';
+public static var BUTTON_INVENTORY = 'Back';
+public static var AXIS_RESERVE_VERTICAL = 'D-Pad Vertical';
+public static var AXIS_RESERVE_HORIZONTAL = 'D-Pad Horizontal';
+
+// debug controller constants
+private static var DEBUG_HEALTH_INCREMENT = 'Num Add';
+private static var DEBUG_HEALTH_DECREMENT = 'Num Subtract';
+private static var DEBUG_TIME_DOUBLE = 'Num Multiply';
+private static var DEBUG_TIME_HALF = 'Num Divide';
+
+
+///////////////////////////////
+/////////// GLOBALS ///////////
+///////////////////////////////
 
 // states
 public static var listening: boolean = true;
@@ -66,42 +99,9 @@ public var playerJump: AudioClip;
 public var playerThrow: AudioClip;
 
 
-/*************/
-/* CONSTANTS */
-/*************/
-
-// direction
-private static var LEFT = -1;
-private static var RIGHT = 1;
-
-// controller constants
-private static var BUTTON_JUMP = 'A';
-private static var BUTTON_RUN = 'Left Stick Button';
-public static var BUTTON_ITEM_PRIMARY = 'X';
-public static var BUTTON_ITEM_SECONDARY = 'Y';
-private static var BUTTON_CONTEXT = 'B';
-private static var AXIS_WALK = 'Left Stick Horizontal';
-private static var AXIS_AIM = 'Left Stick Vertical';
-private static var AXIS_CLIMB = 'Left Stick Vertical';
-private static var AXIS_TURN = 'Right Stick Horizontal';
-private static var BUTTON_TURN_RIGHT = 'Right Button';
-private static var BUTTON_TURN_LEFT = 'Left Button';
-private static var AXIS_CAMERA = 'Right Stick Vertical';
-private static var BUTTON_MENU = 'Start';
-public static var BUTTON_INVENTORY = 'Back';
-public static var AXIS_RESERVE_VERTICAL = 'D-Pad Vertical';
-public static var AXIS_RESERVE_HORIZONTAL = 'D-Pad Horizontal';
-
-// debug controller constants
-private static var DEBUG_HEALTH_INCREMENT = 'Num Add';
-private static var DEBUG_HEALTH_DECREMENT = 'Num Subtract';
-private static var DEBUG_TIME_DOUBLE = 'Num Multiply';
-private static var DEBUG_TIME_HALF = 'Num Divide';
-
-
-/***************/
-/* CONSTRUCTOR */
-/***************/
+///////////////////////////////
+///////// CONSTRUCTOR /////////
+///////////////////////////////
 
 function Start() {
 	
@@ -127,9 +127,10 @@ function Start() {
 	
 }
 
-/**********/
-/* LOOPER */
-/**********/
+
+///////////////////////////////
+///////// MAIN LOOPER /////////
+///////////////////////////////
 
 function Update() {
 	
@@ -146,9 +147,9 @@ function Update() {
 }
 
 
-/**********************/
-/* DEALING WITH INPUT */
-/**********************/
+//////////////////////////////
+///// DEALING WITH INPUT /////
+//////////////////////////////
 
 // makes the player start listening
 public static function StartListening() {
@@ -241,9 +242,9 @@ function CheckDebugInput() {
 }
 
 
-/******************/
-/* TRIGGER EVENTS */
-/******************/
+//////////////////////////////
+/////// TRIGGER EVENTS ///////
+//////////////////////////////
 
 // trigger enter events
 //TODO abstract so that no switch statement is used
@@ -292,9 +293,9 @@ function OnTriggerExit(trigger: Collider) {
 }
 
 
-/******************/
-/* BASIC MOVEMENT */
-/******************/
+//////////////////////////////
+/////// BASIC MOVEMENT ///////
+//////////////////////////////
 
 // returns whether the player can currently be controlled
 function IsListening(): boolean {
@@ -344,9 +345,9 @@ function GetPlayerDirection() {
 }
 
 
-/************
- * CLIMBING *
- ************/
+//////////////////////////////
+////////// CLIMBING //////////
+//////////////////////////////
 
 // returns whther or not the player is near something that is climbable
 function CanClimb(): boolean {
@@ -391,9 +392,9 @@ function FinishClimbing() {
 }
 
 
-/******************************/
-/* TRACKS AND STAYING ON THEM */
-/******************************/
+//////////////////////////////
+//// TRACKS AND ALIGNMENT ////
+//////////////////////////////
 
 // returns true if a transform is facing the x axis (in either direction)
 //TODO move this to EnvironmentScript?
@@ -468,9 +469,9 @@ function Align() {
 }
 
 
-/******************
- * TURNING AROUND *
- ******************/
+//////////////////////////////
+/////// TURNING AROUND ///////
+//////////////////////////////
 
 // returns whether the player is currently on a crossroads
 function OnCrossroads(): boolean {
@@ -541,9 +542,9 @@ function CrossRoads(clockDirection: int, track: Transform) {
 }
 
 
-/***************
- * USING ITEMS *
- ***************/
+///////////////////////////////
+///////// USING ITEMS /////////
+///////////////////////////////
 
 function GetPrimaryItem(): Rigidbody {
 	return primaryItem;
@@ -601,9 +602,9 @@ function ItemRelease(item: Rigidbody) {
 }
 
 
-/******************
- * CONTEXT ACTION *
- ******************/
+//////////////////////////////
+/////// CONTEXT ACTION ///////
+//////////////////////////////
  
 function GetContextName(): String {
 	return contextName;
@@ -631,9 +632,9 @@ function OpenTreasureChest(treasureChest: GameObject) {
 }
 
 
-/*************************
- * CARRYING AND DROPPING *
- *************************/
+///////////////////////////////
+//// CARRYING AND DROPPING ////
+///////////////////////////////
 
 // pick up an object
 function PickUp(object: Rigidbody) {
@@ -672,9 +673,9 @@ function GetDropPosition(): Vector3 {
 }
 
 
-/***********************
- * AIMING AND THROWING *
- ***********************/
+///////////////////////////////
+///// AIMING AND THROWING /////
+///////////////////////////////
 
 // checks whether the player can aim
 function CanAim() {
@@ -737,7 +738,7 @@ function Shoot(projectile: Rigidbody) {
 	aimCharge = minAimCharge;
 }
 
-/*************************
- ** SWIMMING AND DIVING **
- *************************/
+///////////////////////////////
+///// SWIMMING AND DIVING /////
+///////////////////////////////
 
