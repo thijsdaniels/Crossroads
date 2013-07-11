@@ -1,7 +1,12 @@
 #pragma strict
 
+// constants
 public static var CHUNK_SIZE: int = 16;
+public static var AHEAD: int = -1;
+public static var INTERSECT: int = 0;
+public static var BEHIND: int = 1;
 
+// members
 private var position: Vector3;
 private var blocks: Block[,,];
 private var mesh: Mesh;
@@ -47,6 +52,10 @@ function InRange(position: Vector3): boolean {
 	if (position.z < 0 || position.z >= TerrainScript.TERRAIN_SIZE.z) return false;
 	return true;
 }
+
+///////////////
+// RENDERING //
+///////////////
 
 // renders the chunk
 public function Render() {
@@ -200,6 +209,54 @@ public function Render() {
 	meshCollider.mesh = mesh;
 }
 
+// checks whether a space is occupied
+public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boolean {
+	
+	// if the position is not in range, assume that the position is not occupied
+	//TODO better than this assumption would be a check in the adjacent chunk
+	if (position.x < 0 || position.y < 0 || position.z < 0 || position.x >= CHUNK_SIZE || position.y >= CHUNK_SIZE || position.z >= CHUNK_SIZE) {
+		return false;
+	}
+	
+	// check the position for a block
+	var block = blocks[position.x, position.y, position.z];
+	if (block == null || !block.IsActive() || (ignoreTranslucent && block.IsTranslucent())) {
+		return false;
+	} else {
+		return true;
+	}
+	
+}
+
+/////////////
+// SLICING //
+/////////////
+
+public function GetSlicePosition(axis: int, position: int, direction: int) {
+
+	// determine which coordinate of the chunk's position to evaluate
+	var chunkPosition: float;
+	var reverseDirection = false;
+	if (axis == EnvironmentScript.X_AXIS) {
+		chunkPosition = transform.position.z;
+		if (direction == EnvironmentScript.SOUTH) {
+			reverseDirection = true;
+		}
+	} else {
+		chunkPosition = transform.position.x;
+		if (direction == EnvironmentScript.WEST) {
+			reverseDirection = true;
+		}
+	}
+
+	if (position > chunkPosition) {
+		if (position < chunkPosition + CHUNK_SIZE) {
+			return INTERSECT;
+		}
+		return (reverseDirection) ? BEHIND : AHEAD;
+	}
+}
+
 public function Slice(axis: int, position: int, direction: int) {
 	var different = false;
 	for (var x = 0; x < CHUNK_SIZE; x++) {
@@ -267,26 +324,24 @@ public function Slice(axis: int, position: int, direction: int) {
 	if (different) {
 		Render();
 	}
+	Show();
 }
 
-// checks whether a space is occupied
-public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boolean {
-	
-	// if the position is not in range, assume that the position is not occupied
-	//TODO better than this assumption would be a check in the adjacent chunk
-	if (position.x < 0 || position.y < 0 || position.z < 0 || position.x >= CHUNK_SIZE || position.y >= CHUNK_SIZE || position.z >= CHUNK_SIZE) {
-		return false;
+public function Hide() {
+	if (renderer.enabled) {
+		renderer.enabled = false;
 	}
-	
-	// check the position for a block
-	var block = blocks[position.x, position.y, position.z];
-	if (block == null || !block.IsActive() || (ignoreTranslucent && block.IsTranslucent())) {
-		return false;
-	} else {
-		return true;
-	}
-	
 }
+
+public function Show() {
+	if (!renderer.enabled) {
+		renderer.enabled = true;
+	}
+}
+
+////////////
+// BLOCKS //
+////////////
 
 class Block {
 

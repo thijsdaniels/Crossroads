@@ -147,8 +147,25 @@ public static function Slice(axis: int, position: int, direction: int) {
 	var startTime = Time.realtimeSinceStartup * 1000;
 
 	for (var chunk: GameObject in CHUNKS) {
+
+		// get the chunk's position relative to the track
 		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
-		chunkScript.Slice(axis, position, direction);
+		var chunkPosition = chunkScript.GetSlicePosition(axis, position, direction);
+
+		// if the chunk is intersected by the track, slice it
+		if (chunkPosition == ChunkScript.INTERSECT) {
+			chunkScript.Slice(axis, position, direction);
+		}
+
+		// else, if the chunk is ahead of the track, hide it
+		else if (chunkPosition == ChunkScript.AHEAD) {
+			chunkScript.Hide();
+		}
+		
+		// else, if the chunk is behind the track, show it
+		else if (chunkPosition == ChunkScript.BEHIND) {
+			chunkScript.Show();
+		}
 	}
 
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
