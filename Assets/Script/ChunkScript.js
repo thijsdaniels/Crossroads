@@ -53,9 +53,9 @@ function InRange(position: Vector3): boolean {
 	return true;
 }
 
-///////////////
-// RENDERING //
-///////////////
+//////////////////////////////
+///////// RENDERING //////////
+//////////////////////////////
 
 // renders the chunk
 public function Render() {
@@ -228,9 +228,9 @@ public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boole
 	
 }
 
-/////////////
-// SLICING //
-/////////////
+//////////////////////////////
+////////// SLICING ///////////
+//////////////////////////////
 
 public function GetSlicePosition(axis: int, position: int, direction: int): int {
 
@@ -355,9 +355,9 @@ public function ShowAll() {
 	Show();
 }
 
-////////////
-// BLOCKS //
-////////////
+//////////////////////////////
+/////////// BLOCKS ///////////
+//////////////////////////////
 
 class Block {
 
