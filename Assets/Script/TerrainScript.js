@@ -74,10 +74,8 @@ function IndexTerrain() {
 		var index = Position2Index(block.transform.position);
 		if (TERRAIN[index.x, index.y, index.z] != 0) Debug.LogWarning('TERRAIN: Duplicate Block found at ' + block.transform.position);
 		
-		//get block type
-		//var blockScript: BlockScript = block.GetComponent(BlockScript);
-		//var type = blockScript.GetType();
-		var type = Block.BLOCKTYPE.GRASS;
+		// get block type from tag
+		var type = parseInt(block.tag);
 		
 		// store block type at block index
 		TERRAIN[index.x, index.y, index.z] = type;

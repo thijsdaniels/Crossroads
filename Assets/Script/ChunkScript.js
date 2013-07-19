@@ -66,145 +66,180 @@ public function Render() {
 	// generate vertices and triangles
 	var vertices = new Array();
 	var triangles = new Array();
+	var uv = new Array();
 
 	for (var x = 0; x < CHUNK_SIZE; x++) {
 		for (var y = 0; y < CHUNK_SIZE; y++) {
 			for (var z = 0; z < CHUNK_SIZE; z++) {
-			
+
 				var position = Vector3(x, y, z);
 				var block: Block = this.blocks[x, y, z];
-				
+
 				if (block != null && block.IsActive()) {
-					
+
+					var material: int = block.GetMaterial();
+					var texture = (material - 1) / 10.0;
 					var vertexIndex: int = 0;
 
-                    if (!IsOccupied(position + Vector3.up, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
-                    
-                    if (!IsOccupied(position + Vector3.back, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
-                    
-                    if (!IsOccupied(position + Vector3.left, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
-                    
-                    if (!IsOccupied(position + Vector3.forward, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
-                    
-                    if (!IsOccupied(position + Vector3.right, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
-                    
-                    if (!IsOccupied(position + Vector3.down, true)) {
-                    
-                        vertexIndex = vertices.length;
-                        
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
-                        vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
- 
-                        triangles.Add(vertexIndex);
-                        triangles.Add(vertexIndex + 1);
-                        triangles.Add(vertexIndex + 2);
-                         
-                        triangles.Add(vertexIndex + 2);
-                        triangles.Add(vertexIndex + 3);
-                        triangles.Add(vertexIndex);
-                    }
+					if (!IsOccupied(position + Vector3.up, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 2/3.0));
+						uv.Add(Vector2(texture + 0, 1));
+						uv.Add(Vector2(texture + 1/10.0, 1));
+						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+					}
+
+					if (!IsOccupied(position + Vector3.back, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 1/3.0));
+						uv.Add(Vector2(texture + 0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+					}
+
+					if (!IsOccupied(position + Vector3.left, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 1/3.0));
+						uv.Add(Vector2(texture + 0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+					}
+
+					if (!IsOccupied(position + Vector3.forward, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 1/3.0));
+						uv.Add(Vector2(texture + 0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+					}
+
+					if (!IsOccupied(position + Vector3.right, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y + Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 1/3.0));
+						uv.Add(Vector2(texture + 0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+					}
+
+					if (!IsOccupied(position + Vector3.down, true)) {
+
+						vertexIndex = vertices.length;
+
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x - Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z - Block.BLOCKSIZE));
+						vertices.Add(Vector3(position.x + Block.BLOCKSIZE, position.y - Block.BLOCKSIZE, position.z + Block.BLOCKSIZE));
+
+						triangles.Add(vertexIndex);
+						triangles.Add(vertexIndex + 1);
+						triangles.Add(vertexIndex + 2);
+
+						triangles.Add(vertexIndex + 2);
+						triangles.Add(vertexIndex + 3);
+						triangles.Add(vertexIndex);
+
+						uv.Add(Vector2(texture + 0, 0));
+						uv.Add(Vector2(texture + 0, 1/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+						uv.Add(Vector2(texture + 1/10.0, 0));
+					}
 				}
 			}
 		}
 	}
-	
+
+	/*
 	// generate uvs
 	var uv: Vector2[] = new Vector2[vertices.length];
-    for (var i = 0; i < uv.length; i++) {
-    	var vertice: Vector3 = vertices[i];
-    	uv[i] = Vector2(vertice.x, vertice.z);
-    }
-	
+	for (var i = 0; i < uv.length; i++) {
+		var vertice: Vector3 = vertices[i];
+		uv[i] = Vector2(vertice.x, vertice.z);
+	}
+	*/
+
 	// build mesh
 	mesh = new Mesh();
-    mesh.vertices = vertices;
-    mesh.triangles = triangles;
-    mesh.uv = uv;
-    mesh.RecalculateNormals();
-    
-    // set mesh to filter and collider
+	mesh.vertices = vertices;
+	mesh.triangles = triangles;
+	mesh.uv = uv;
+	mesh.RecalculateNormals();
+	
+	// set mesh to filter and collider
 	meshFilter.mesh = mesh;
 	meshCollider.mesh = mesh;
 }
@@ -363,30 +398,33 @@ class Block {
 
 	// constants
 	final public static var BLOCKSIZE: float = 0.5;
-	public static class BLOCKTYPE {
+	public static class MATERIAL {
 		public var GRASS: int = 1;
 		public var DIRT: int = 2;
-		public var STONE: int = 3;
+		public var ROCK: int = 3;
 		public var WOOD: int = 4;
 		public var SAND: int = 5;
 		public var LAVA: int = 6;
 	}
 
 	// members
-	private var type: int;
+	private var material: int;
 	private var translucent: boolean = false;
 	private var active: boolean = true;
 	
 	// constructors
-	public function Block(_type: int) {
-		type = _type;
+	public function Block(_material: int) {
+		material = _material;
 	}
-	public function Block(_type: int, _translucent: boolean) {
-		type = _type;
+	public function Block(_material: int, _translucent: boolean) {
+		material = _material;
 		translucent = _translucent;
 	}
 	
 	// getters
+	public function GetMaterial(): int {
+		return material;
+	}
 	public function IsTranslucent(): boolean {
 		return translucent;
 	}
@@ -395,8 +433,11 @@ class Block {
 	}
 	
 	// setters
-	public function SetType(_type: int) {
-		type = _type;
+	public function SetMaterial(_material: int) {
+		material = _material;
+	}
+	public function SetTranslucent(_translucent: boolean) {
+		translucent = _translucent;
 	}
 	public function SetActive(_active: boolean) {
 		active = _active;
