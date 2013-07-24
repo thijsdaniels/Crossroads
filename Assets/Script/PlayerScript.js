@@ -323,12 +323,30 @@ function Move(movement: float) {
 		direction = LEFT;
 	}
 	
-	// move the player
-	//TODO the way it works now, when you just release the run button while running, 'braking' by pressing the opposite direction won't work until the velocity has reduced to less than the maximum. Instead of doing this, separate left and right velocity and set a 'minimum' (negative maximum) on the left direction. this way you can still brake.
-	var runningFactor: float = IsRunning() ? 1.5 : 1;
-	var groundedFactor: float = IsGrounded() ? 1 : 0.75;
-	var acceleration =  movement * Time.deltaTime * accelerationSpeed * groundedFactor * Mathf.Max(0, 1 - rigidbody.velocity.magnitude / (maxSpeed * runningFactor));
-	rigidbody.velocity += transform.forward * acceleration;
+	// calculate the acceleration
+	var Acc_groundedFactor: float = IsGrounded() ? 1 : 0.5;
+	var acceleration: float =  movement * Time.deltaTime * accelerationSpeed * Acc_groundedFactor;
+
+	// discard the acceleration if over the maximum
+	var Max_runningMaxFactor: float = IsRunning() ? 1.5 : 1;
+	var Max_groundedMaxFactor: float = IsGrounded() ? 1 : 0.75;
+	var currentForwardVelocity: float = SumVector(Vector3.Scale(rigidbody.velocity, transform.forward));
+	if (movement > 0) {
+		if (currentForwardVelocity + acceleration > (maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
+			acceleration = 0;
+		}
+	} else if (movement < 0) {
+		if (currentForwardVelocity - acceleration < (-maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
+			acceleration = 0;
+		}
+	}
+
+	// accelerate the player
+	rigidbody.AddForce(transform.forward * acceleration, ForceMode.VelocityChange);
+}
+
+function SumVector(vector: Vector3): float {
+	return vector.x + vector.y + vector.z;
 }
 
 // makes the player jump if it is on the ground

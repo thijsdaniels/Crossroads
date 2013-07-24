@@ -26,9 +26,9 @@ function FixedUpdate () {
 	
 	// calculate the force of the boyancy
 	var boyancyPoint: Vector3 = transform.position + transform.TransformDirection(floatOffset);
-	var forceFactor: float = 1f - ((boyancyPoint.y - water.position.y) * (boyancy / rigidbody.mass));
+	var forceFactor: float = 1f - ((boyancyPoint.y - water.position.y));
 	
-	if (forceFactor > 0f) {
+	if (forceFactor > 0) {
 		StartSwimming();
 	
 		if (!diving) {
@@ -59,11 +59,11 @@ function StopSwimming() {
 function Float(boyancyPoint: Vector3, forceFactor: float) {
 
 	// add a force to the rigidbody to make it float
-	var uplift = -Physics.gravity * forceFactor;
+	var uplift = -Physics.gravity * forceFactor * rigidbody.mass * boyancy;
 	this.rigidbody.AddForceAtPosition(uplift, boyancyPoint);
 	
-	// determine whether the player is floating (i.e. the forces of gravity and boyancy are in  equilibrium)
-	if (Mathf.Abs(Physics.gravity.y * rigidbody.mass + uplift.y) < floatMargin) {
+	// determine whether the player is floating (i.e. the forces of gravity and uplift are in equilibrium)
+	if (Mathf.Abs(Physics.gravity.y * rigidbody.mass + uplift.y) < floatMargin * rigidbody.mass) {
 		floating = true;
 	} else {
 		floating = false;

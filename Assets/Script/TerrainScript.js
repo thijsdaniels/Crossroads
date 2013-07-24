@@ -142,6 +142,7 @@ function CreateChunks() {
 
 public static function Slice(axis: int, position: int, direction: int) {
 
+	var chunksSliced = 0;
 	var startTime = Time.realtimeSinceStartup * 1000;
 
 	for (var chunk: GameObject in CHUNKS) {
@@ -153,6 +154,7 @@ public static function Slice(axis: int, position: int, direction: int) {
 		// if the chunk is intersected by the track, slice it
 		if (chunkPosition == ChunkScript.INTERSECT) {
 			chunkScript.Slice(axis, position, direction);
+			chunksSliced++;
 		}
 
 		// else, if the chunk is ahead of the track, hide it
@@ -167,5 +169,5 @@ public static function Slice(axis: int, position: int, direction: int) {
 	}
 
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
-	Debug.Log('TERRAIN: Hid terrain in ' + processingTime.ToString('f0') + ' milliseconds.');
+	Debug.Log('TERRAIN: Sliced ' + chunksSliced + ' chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
 }
