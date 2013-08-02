@@ -200,10 +200,10 @@ function CheckInput() {
 			if (contextAction != null) contextAction(contextObject);
 		}
 		if (Input.GetButtonDown(BUTTON_TURN_RIGHT)) {
-			Turn(EnvironmentScript.CLOCKWISE);
+			Spin(EnvironmentScript.CLOCKWISE);
 		}
 		if (Input.GetButtonDown(BUTTON_TURN_LEFT)) {
-			Turn(EnvironmentScript.COUNTERCLOCKWISE);
+			Spin(EnvironmentScript.COUNTERCLOCKWISE);
 		}
 		if (Input.GetAxis(AXIS_RESERVE_VERTICAL) > 0) {
 			primaryItem = firstReserve;
@@ -345,6 +345,7 @@ function Move(movement: float) {
 	rigidbody.AddForce(transform.forward * acceleration, ForceMode.VelocityChange);
 }
 
+// helper method that returns the sum of all components of a vector
 function SumVector(vector: Vector3): float {
 	return vector.x + vector.y + vector.z;
 }
@@ -480,7 +481,7 @@ function Align() {
 	
 	// adjust the direction of the player if necessary
 	if (trackAdjuster != null && (IsGrounded() || (IsClimbing() && transform.position.y >= trackAdjuster.transform.position.y))) {
-		CrossRoads(EnvironmentScript.CLOCKWISE, trackAdjuster.transform);
+		Turn(EnvironmentScript.CLOCKWISE, trackAdjuster.transform);
 		trackAdjuster = null;
 	}
 	
@@ -497,20 +498,29 @@ function OnCrossroads(): boolean {
 }
 
 // turns the player around either 90 degrees or 180 degrees depending on the prescence of a crossroads
-function Turn(direction: int) {
-	if (IsGrounded()) {
-		rigidbody.velocity.x = 0;
-		rigidbody.velocity.z = 0;
-		if (OnCrossroads()) {
-			CrossRoads(direction, crossroads.transform);
-		} else {
-			UTurn(direction);
-		}
+function Spin(direction: int) {
+
+	// make sure conditions are met
+	if (!IsListening()/* || !IsGrounded()*/) return;
+
+	// store velocity and stop the player
+	var velocity = rigidbody.velocity;
+	rigidbody.velocity = Vector3.zero;
+
+	// flip or turn
+	if (OnCrossroads()) {
+		Turn(direction, crossroads.transform);
+	} else {
+		Flip(direction);
 	}
+
+	// give the player its velocity back
+	//TODO transform the velocity to the player's forward direction
+	rigidbody.velocity = velocity;
 }
 
 // rotates the player 180 degrees along the y-axis
-function UTurn(clockDirection: int) {
+function Flip(clockDirection: int) {
 		
 	// prepare
 	StopListening();
@@ -532,7 +542,7 @@ function UTurn(clockDirection: int) {
 
 // rotates the player 90 degrees along the y-axis
 // also translates the player to the provided track marker to prevent derailing
-function CrossRoads(clockDirection: int, track: Transform) {
+function Turn(clockDirection: int, track: Transform) {
 	
 	// prepare
 	StopListening();
