@@ -41,7 +41,7 @@ private static var DEBUG_TIME_HALF = 'Num Divide';
 public static var listening: boolean = true;
 private var climbing: boolean = false;
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
-private var carrying: Rigidbody;
+private var carrying: GameObject;
 private var swimming: boolean = false;
 private var swimScript: SwimScript;
 
@@ -50,8 +50,6 @@ public var maxSpeed: float = 8;
 public var jumpForce: float = 400;
 public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
 public var climbSpeed: float = 5;
-public var throwSpeed: float = 10;
-public var shootSpeed: float = 40;
 public var accelerationSpeed: float = 40;
 
 // land mechanics
@@ -70,22 +68,18 @@ private var contextAction: Function;
 private var contextObject: GameObject;
 
 // item slots
-public var primaryItem: Rigidbody;
-public var secondaryItem: Rigidbody;
-public var firstReserve: Rigidbody;
-public var secondReserve: Rigidbody;
-public var thirdReserve: Rigidbody;
-public var fourthReserve: Rigidbody;
+public var primaryItem: Item;
+public var secondaryItem: Item;
+public var firstReserve: Item;
+public var secondReserve: Item;
+public var thirdReserve: Item;
+public var fourthReserve: Item;
 
 // aiming
 private var aimAngle: float = 45;
 private var minAimCharge: float = 0.2;
 private var aimCharge: float = minAimCharge;
 private var aimChargeDuration = 1;
-
-// items
-public var bomb: Rigidbody;
-public var arrow: Rigidbody;
 
 // inventory
 public var inventory: GameObject;
@@ -179,22 +173,22 @@ function CheckInput() {
 			Jump();
 		}
 		if (Input.GetButtonDown(BUTTON_ITEM_PRIMARY)) {
-			ItemPress(primaryItem);
+			primaryItem.Press();
 		}
 		if (Input.GetButton(BUTTON_ITEM_PRIMARY)) {
-			ItemHold(primaryItem);
+			primaryItem.Hold();
 		}
 		if (Input.GetButtonUp(BUTTON_ITEM_PRIMARY)) {
-			ItemRelease(primaryItem);
+			primaryItem.Release();
 		}
 		if (Input.GetButtonDown(BUTTON_ITEM_SECONDARY)) {
-			ItemPress(secondaryItem);
+			secondaryItem.Press();
 		}
 		if (Input.GetButton(BUTTON_ITEM_SECONDARY)) {
-			ItemHold(secondaryItem);
+			secondaryItem.Hold();
 		}
 		if (Input.GetButtonUp(BUTTON_ITEM_SECONDARY)) {
-			ItemRelease(secondaryItem);
+			secondaryItem.Release();
 		}
 		if (Input.GetButtonDown(BUTTON_CONTEXT)) {
 			if (contextAction != null) contextAction(contextObject);
@@ -305,7 +299,13 @@ function IsListening(): boolean {
 // returns true if a raycast to the 'feet' of the player did not hit anything
 //BUG use capsulecast for more accuracy and add a layermask to ignore trigger objects
 function IsGrounded(): boolean {
-	return Physics.Raycast(transform.position, Vector3.down, verticalBounds + groundedMargin);
+	return (GetFoundation() != null);
+}
+
+function GetFoundation(): GameObject {
+	var raycastHit: RaycastHit;
+	Physics.Raycast(transform.position, Vector3.down, raycastHit, verticalBounds + groundedMargin);
+	return (raycastHit.collider) ? raycastHit.collider.gameObject : null;
 }
 
 // returns whether the player is holding the run button
@@ -434,6 +434,7 @@ function GetDirection(trans: Transform): int {
 }
 
 // returns the axis perpendicular to the provided axis
+//TODO move this to EnvironmentScript?
 function GetPerpendicularAxis(axis: int) {
 	return (axis == EnvironmentScript.X_AXIS) ? EnvironmentScript.Z_AXIS : EnvironmentScript.X_AXIS;
 }
@@ -574,59 +575,28 @@ function Turn(clockDirection: int, track: Transform) {
 ///////// USING ITEMS /////////
 ///////////////////////////////
 
-function GetPrimaryItem(): Rigidbody {
+function GetPrimaryItem(): Item {
 	return primaryItem;
 }
 
-function GetSecondaryItem(): Rigidbody {
+function GetSecondaryItem(): Item {
 	return secondaryItem;
 }
 
-function GetFirstReserve(): Rigidbody {
+function GetFirstReserve(): Item {
 	return firstReserve;
 }
 
-function GetSecondReserve(): Rigidbody {
+function GetSecondReserve(): Item {
 	return secondReserve;
 }
 
-function GetThirdReserve(): Rigidbody {
+function GetThirdReserve(): Item {
 	return thirdReserve;
 }
 
-function GetFourthReserve(): Rigidbody {
+function GetFourthReserve(): Item {
 	return fourthReserve;
-}
-
-//WARNING the below three functions are just test examples using bombs
-//TODO move the below three functions to each item's main script
-
-function ItemPress(item: Rigidbody) {
-	if (!swimScript.IsSwimming() && !IsCarrying()) {
-		if (item == bomb) {
-			var instance = Instantiate(item, transform.position + Vector3.up, Quaternion.identity);
-			PickUp(instance);
-		}
-	}
-}
-
-function ItemHold(item: Rigidbody) {
-	if (!swimScript.IsSwimming()) {
-		if (item == bomb || item == arrow) {
-			ChargeAim();
-		}
-	}
-}
-
-function ItemRelease(item: Rigidbody) {
-	if (!swimScript.IsSwimming()) {
-		if (item == bomb) {
-			Throw();
-		}
-		else if (item == arrow) {
-			Shoot(item);
-		}
-	}
 }
 
 
@@ -665,15 +635,20 @@ function OpenTreasureChest(treasureChest: GameObject) {
 ///////////////////////////////
 
 // pick up an object
-function PickUp(object: Rigidbody) {
+function PickUp(object: GameObject) {
 	carrying = object;
+}
+
+function Draw(object: GameObject) {
+	var instance = Instantiate(object, transform.position + Vector3.up, Quaternion.identity);
+	PickUp(instance);
 }
 
 // drags along carried object
 function Carry() {
 	if (IsCarrying()) {
 		carrying.transform.position = GetCarryingPosition();
-		carrying.velocity = rigidbody.velocity;
+		carrying.rigidbody.velocity = rigidbody.velocity;
 	}
 }
 
@@ -740,33 +715,25 @@ function IsAimCharged() {
 }
 
 // throws carried object
-function Throw() {
+function Throw(speedFactor: float) {
 	if (IsCarrying()) {
 		var throwing = carrying;
 		carrying = null;
 		var aimAngleRads = aimAngle * (Mathf.PI / 180);
-		throwing.velocity = 
+		throwing.rigidbody.velocity = 
 			this.rigidbody.velocity + 
-			(GetPlayerDirection() * aimCharge * throwSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
-			(aimCharge * throwSpeed * transform.up * Mathf.Sin(aimAngleRads));
+			(GetPlayerDirection() * aimCharge * speedFactor * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(aimCharge * speedFactor * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	}
 	aimCharge = minAimCharge;
 }
 
-// shoots a projectile
-function Shoot(projectile: Rigidbody) {
-	var instance = Instantiate(projectile, transform.position + Vector3.up, Quaternion.identity);
-	var aimAngleRads = aimAngle * (Mathf.PI / 180);
-	instance.velocity = 
-			this.rigidbody.velocity + 
-			(GetPlayerDirection() * aimCharge * shootSpeed * transform.forward * Mathf.Cos(aimAngleRads)) + 
-			(aimCharge * shootSpeed * transform.up * Mathf.Sin(aimAngleRads));
-		vocalTrack.PlayOneShot(playerThrow);
-	aimCharge = minAimCharge;
-}
 
 ///////////////////////////////
 ///// SWIMMING AND DIVING /////
 ///////////////////////////////
 
+function IsSwimming() {
+	return swimScript.IsSwimming();
+}

@@ -32,19 +32,20 @@
 - The triggers are still free.
 - How will the player run?
   - Pushing the left stick button?
-  - Dashing the left stick, like in smash bros?
+  > Dashing the left stick, like in smash bros?
   - With the X Button when nothing is equiped (which would mean the player cannot attack in this case, and cannot run when something is equipped)?
+  > With the context sensitive button (currently B, but should be switched with X in this case)?
   - Make it so that the player jumps on releasing the A Button and runs while the A Button is still pressed (which would mean that the player would forcefully jump when it would stop running)?
 
 ### Health System <code>done</code>
 - Copied off of Zelda, the player has a certain amount of hearts, each consisting of 4 health units.
 
-### Swimming, Digging and Flying
+### Diving, Digging and Flying
 Since the game is viewed entirely from the side, there is inherently an emphasis on vertical movement. Because of that, going underground, under water and into the air are big opportunities. The awesome thing is that the player can see underground and under water before he has a way to dig and swim, as the terrain slicing makes everything visible.
-- Make a way to swim and dive.
+- Make a way to dive.
 - Make a shovel. It can dig away blocks below the player (but only designated blocks, otherwise the player could get himself stuck too easily) to reach underground caverns.
 - Make a way to fly ssb style, or at least double jump.
-- Maybe even make a place higher than the sky land that is in space with zero-g? For example you wouldnt be able to do anything there untill you have the iron boots that also make you sink, but here give you gravity.
+- Maybe even make a place higher than the sky land that is in space with low gravity? Maybe fun to make gravity so low that jumping would launch you too high and kill you, so you need the iron boots to jump lower.
 
 ### Fix Player Movement
 - What is the correct way to move a rigidbody? Should it be translated, or should a force be applied? The latter seems to work better, but is still not very smooth. Or do all terrain blocks need to have a rigidbody component as well? Or a terrain-collider perhaps?

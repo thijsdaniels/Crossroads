@@ -1,8 +1,9 @@
 #pragma strict
 
 public var player: GameObject;
-public var items: GUITexture[,] = new GUITexture[6,3];
+public var items: Item[,] = new Item[6,3];
 public var cursor: GUITexture;
+private var item: Item;
 
 private var playerScript: PlayerScript;
 private var blurEffect: BlurEffect;
@@ -22,9 +23,24 @@ private static var RIGHT = 1;
 private static var DOWN = 2;
 private static var LEFT = 3;
 
-// items
-public var bomb: GUITexture;
-public var bow: GUITexture;
+// item icons
+public var bombBagIcon: GUITexture;
+public var boomerangIcon: GUITexture;
+public var bowIcon: GUITexture;
+public var hookshotIcon: GUITexture;
+public var ironBootsIcon: GUITexture;
+public var lanternIcon: GUITexture;
+public var lensOfTruthIcon: GUITexture;
+public var magicWandIcon: GUITexture;
+public var megatonHammerIcon: GUITexture;
+public var ocarinaIcon: GUITexture;
+public var shovelIcon: GUITexture;
+public var swordIcon: GUITexture;
+
+// item projectiles
+public var bombBagProjectile: GameObject;
+public var boomerangProjectile: GameObject;
+public var bowProjectile: GameObject;
 
 function Start () {
 	playerScript = player.GetComponent(PlayerScript);
@@ -34,8 +50,25 @@ function Start () {
 	ySpacing = (1 - yMargin * 2) / (items.GetLength(1) - 1);
 	
 	// initialize inventory
-	items[4,0] = bomb;
-	items[2,1] = bow;
+	items[0,0] = new Ocarina(playerScript, ocarinaIcon);
+	items[1,0] = new Lantern(playerScript, lanternIcon);
+	items[2,0] = null;
+	items[3,0] = new Shovel(playerScript, shovelIcon);
+	items[4,0] = new BombBag(playerScript, bombBagIcon, bombBagProjectile);
+	items[1,1] = new Hookshot(playerScript, hookshotIcon);
+	items[2,1] = new Bow(playerScript, bowIcon, bowProjectile);
+	items[3,1] = new Sword(playerScript, swordIcon);
+	items[4,1] = null;
+	items[5,1] = new Boomerang(playerScript, boomerangIcon, boomerangProjectile);
+	items[0,2] = new LensOfTruth(playerScript, lensOfTruthIcon);
+	items[1,2] = null;
+	items[2,2] = null;
+	items[3,2] = new MegatonHammer(playerScript, megatonHammerIcon);
+	items[4,2] = new MagicWand(playerScript, magicWandIcon);
+
+	items[3,0].Unlock();
+	items[4,0].Unlock();
+	items[2,1].Unlock();
 }
 
 function Update () {
@@ -72,30 +105,34 @@ function Update () {
 		
 		// item selection
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_PRIMARY)) {
-			if (items[cursorPosition.x, cursorPosition.y] != null) {
-				playerScript.primaryItem = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+			item = items[cursorPosition.x, cursorPosition.y];
+			if (item != null && item.IsUnlocked()) {
+				playerScript.primaryItem = item;
 			}
 		}
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_SECONDARY)) {
-			if (items[cursorPosition.x, cursorPosition.y] != null) {
-				playerScript.secondaryItem = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+			item = items[cursorPosition.x, cursorPosition.y];
+			if (item != null && item.IsUnlocked()) {
+				playerScript.secondaryItem = item;
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL)) {
-			if (items[cursorPosition.x, cursorPosition.y] != null) {
+			item = items[cursorPosition.x, cursorPosition.y];
+			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL) > 0) {
-					playerScript.firstReserve = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+					playerScript.firstReserve = item;
 				} else {
-					playerScript.thirdReserve = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+					playerScript.thirdReserve = item;
 				}
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL)) {
-			if (items[cursorPosition.x, cursorPosition.y] != null) {
+			item = items[cursorPosition.x, cursorPosition.y];
+			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL) > 0) {
-					playerScript.secondReserve = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+					playerScript.secondReserve = item;
 				} else {
-					playerScript.fourthReserve = items[cursorPosition.x, cursorPosition.y].gameObject.GetComponent(ItemScript).GetItem().rigidbody;
+					playerScript.fourthReserve = item;
 				}
 			}
 		}
@@ -126,12 +163,11 @@ public function Open() {
 		for (var x = 0; x < items.GetLength(0); x++) {
 			for (var y = 0; y < items.GetLength(1); y++) {
 				if (items[x,y] != null) {
-					var itemScript: ItemScript = items[x,y].gameObject.GetComponent(ItemScript);
-					if (itemScript.IsUnlocked()) {
-						var xPosition = xMargin + xSpacing * x;
-						var yPosition = 1 - yMargin - ySpacing * y;
-						Instantiate(itemScript.GetIcon(), Vector3(xPosition, yPosition, 0), Quaternion.identity);
-					}
+					var item = items[x,y];
+					var xPosition = xMargin + xSpacing * x;
+					var yPosition = 1 - yMargin - ySpacing * y;
+					var icon = Instantiate(item.GetIcon(), Vector3(xPosition, yPosition, 0), Quaternion.identity);
+					if (!item.IsUnlocked()) icon.color.a = 0.1;
 				}
 			}
 		}
