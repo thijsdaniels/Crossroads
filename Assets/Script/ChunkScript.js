@@ -5,6 +5,7 @@ public static var CHUNK_SIZE: int = 16;
 public static var AHEAD: int = -1;
 public static var INTERSECT: int = 0;
 public static var BEHIND: int = 1;
+public static var ATLAS_SIZE: Vector2 = Vector2(16f, 4f);
 
 // members
 private var position: Vector3;
@@ -78,8 +79,9 @@ public function Render() {
 				if (block != null && block.IsActive()) {
 
 					var material: int = block.GetMaterial();
-					var texture = (material - 1) / 10.0;
+					var texture = (material - 1) / ATLAS_SIZE.x;
 					var vertexIndex: int = 0;
+					var altSide: int;
 
 					if (!IsOccupied(position + Vector3.up, true)) {
 
@@ -98,10 +100,10 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 2/3.0));
-						uv.Add(Vector2(texture + 0, 1));
-						uv.Add(Vector2(texture + 1/10.0, 1));
-						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, 3/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, 4/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, 4/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, 3/ATLAS_SIZE.y));
 					}
 
 					if (!IsOccupied(position + Vector3.back, true)) {
@@ -121,10 +123,11 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 1/3.0));
-						uv.Add(Vector2(texture + 0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+						altSide = (Random.value > 0.5) ? 1 : 0;
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
 					}
 
 					if (!IsOccupied(position + Vector3.left, true)) {
@@ -144,10 +147,11 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 1/3.0));
-						uv.Add(Vector2(texture + 0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+						altSide = (Random.value > 0.5) ? 1 : 0;
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
 					}
 
 					if (!IsOccupied(position + Vector3.forward, true)) {
@@ -167,10 +171,11 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 1/3.0));
-						uv.Add(Vector2(texture + 0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+						altSide = (Random.value > 0.5) ? 1 : 0;
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
 					}
 
 					if (!IsOccupied(position + Vector3.right, true)) {
@@ -190,10 +195,11 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 1/3.0));
-						uv.Add(Vector2(texture + 0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 2/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
+						altSide = (Random.value > 0.5) ? 1 : 0;
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (2 + altSide)/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, (1 + altSide)/ATLAS_SIZE.y));
 					}
 
 					if (!IsOccupied(position + Vector3.down, true)) {
@@ -213,10 +219,10 @@ public function Render() {
 						triangles.Add(vertexIndex + 3);
 						triangles.Add(vertexIndex);
 
-						uv.Add(Vector2(texture + 0, 0));
-						uv.Add(Vector2(texture + 0, 1/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 1/3.0));
-						uv.Add(Vector2(texture + 1/10.0, 0));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, 0/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 0/ATLAS_SIZE.x, 1/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, 1/ATLAS_SIZE.y));
+						uv.Add(Vector2(texture + 1/ATLAS_SIZE.x, 0/ATLAS_SIZE.y));
 					}
 				}
 			}
