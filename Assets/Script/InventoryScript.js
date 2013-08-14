@@ -3,10 +3,12 @@
 public var player: GameObject;
 public var items: Item[,] = new Item[6,3];
 public var cursor: GUITexture;
+public var selection: GUIText;
 private var item: Item;
 
 private var playerScript: PlayerScript;
 private var blurEffect: BlurEffect;
+private var desaturationEffect: ColorCorrectionCurves;
 private var timeScaleOnOpen: float;
 private var open: boolean = false;
 
@@ -45,6 +47,7 @@ public var bowProjectile: GameObject;
 function Start () {
 	playerScript = player.GetComponent(PlayerScript);
 	blurEffect = Camera.main.GetComponent(BlurEffect);
+	desaturationEffect = Camera.main.GetComponents(ColorCorrectionCurves)[1];
 	
 	xSpacing = (1 - xMargin * 2) / (items.GetLength(0) - 1);
 	ySpacing = (1 - yMargin * 2) / (items.GetLength(1) - 1);
@@ -105,19 +108,19 @@ function Update () {
 		
 		// item selection
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_PRIMARY)) {
-			item = items[cursorPosition.x, cursorPosition.y];
+			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				playerScript.primaryItem = item;
 			}
 		}
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_SECONDARY)) {
-			item = items[cursorPosition.x, cursorPosition.y];
+			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				playerScript.secondaryItem = item;
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL)) {
-			item = items[cursorPosition.x, cursorPosition.y];
+			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL) > 0) {
 					playerScript.firstReserve = item;
@@ -127,7 +130,7 @@ function Update () {
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL)) {
-			item = items[cursorPosition.x, cursorPosition.y];
+			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL) > 0) {
 					playerScript.secondReserve = item;
@@ -157,6 +160,7 @@ public function Open() {
 		timeScaleOnOpen = Time.timeScale;
 		Time.timeScale = 0;
 		blurEffect.enabled = true;
+		desaturationEffect.enabled = true;
 		open = true;
 		
 		// display the item icons
@@ -175,6 +179,7 @@ public function Open() {
 		// instantiate the cursor
 		cursorObject = Instantiate(cursor, Vector3.zero, Quaternion.identity);
 		UpdateCursorPosition();
+		selection.enabled = true;
 		
 	}
 }
@@ -187,10 +192,14 @@ private function Close() {
 		for (var itemIcon in itemIcons) {
 			Destroy(itemIcon);
 		}
+
+		// hide the selection text
+		selection.enabled = false;
 	
 		// finalize
 		Time.timeScale = timeScaleOnOpen;
 		blurEffect.enabled = false;
+		desaturationEffect.enabled = false;
 		open = false;
 		playerScript.StartListening();
 		
@@ -231,4 +240,6 @@ private function TimeOut(duration: int) {
 private function UpdateCursorPosition() {
 	cursorObject.transform.position.x = xMargin + xSpacing * cursorPosition.x;
 	cursorObject.transform.position.y = 1 - yMargin - ySpacing * cursorPosition.y;
+	item = items[cursorPosition.x, cursorPosition.y];
+	selection.text = (item != null) ? item.name : '';
 }
