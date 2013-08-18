@@ -10,6 +10,7 @@ private static var RIGHT = 1;
 
 // controller constants
 private static var BUTTON_JUMP = 'A';
+public static var BUTTON_TALK = 'A';
 private static var BUTTON_RUN = 'Left Stick Button';
 public static var BUTTON_ITEM_PRIMARY = 'X';
 public static var BUTTON_ITEM_SECONDARY = 'Y';

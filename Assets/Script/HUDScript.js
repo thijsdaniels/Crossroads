@@ -28,6 +28,9 @@ private var thirdReserveButton: GUIText;
 private var fourthReserveButton: GUIText;
 private var contextualActionButton: GUIText;
 
+// text
+private var textField: GUIText;
+
 function Start () {
 	
 	// get a reference to the player
@@ -56,7 +59,9 @@ function Start () {
 	thirdReserveButton = thirdReserveButtonObject.GetComponent(GUIText);
 	fourthReserveButton = fourthReserveButtonObject.GetComponent(GUIText);
 	contextualActionButton = contextualActionButtonObject.GetComponent(GUIText);
-	
+
+	// get a reference to the text field
+	textField = GameObject.Find('HUD/TextField').GetComponent(GUIText);	
 }
 
 function Update() {
@@ -135,4 +140,29 @@ function UpdateButtons() {
 	thirdReserveButton.text = (player.GetThirdReserve() != null) ? player.GetThirdReserve().name : 'none';
 	fourthReserveButton.text = (player.GetFourthReserve() != null) ? player.GetFourthReserve().name : 'none';
 	contextualActionButton.text = player.GetContextName();
+}
+
+function DisplayText(text: String[]) {
+
+	// prepare
+	player.StopListening();
+	textField.enabled = true;
+
+	// loop through text using a coroutine, pausing while the player reads
+	var textIndex: int = 0;
+	while (textIndex < text.length) {
+
+		// show the current line
+		textField.text = text[textIndex];
+
+		// wait untill the player presses the talk button, then move to the next line
+		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
+		textIndex++;
+		yield;
+	}
+
+	// finalize
+	textField.enabled = false;
+	textField.text = '';
+	player.StartListening();
 }

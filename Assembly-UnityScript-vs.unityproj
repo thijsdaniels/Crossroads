@@ -49,6 +49,7 @@
      <Compile Include="Assets\Script\BombScript.js" />
      <Compile Include="Assets\Script\ButtonScript.js" />
      <Compile Include="Assets\Script\CameraScript.js" />
+     <Compile Include="Assets\Script\CharacterScript.js" />
      <Compile Include="Assets\Script\ChunkScript.js" />
      <Compile Include="Assets\Script\CrosshairScript.js" />
      <Compile Include="Assets\Script\EnvironmentScript.js" />
