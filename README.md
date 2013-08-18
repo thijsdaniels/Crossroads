@@ -2,47 +2,23 @@
 
 ### A 2.75D platformer adventure game, inspired by Zelda, FEZ and Mario.
 
-# Task List <code>Demo Alpha Version</code>
+## Task List <code>Demo Alpha Version</code>
 
-## Voxel-Engine
-- <code>DONE</code>Make chunks that each contain a certain number of terrain voxels.
-- <code>DONE</code>Each chunk should have a method for rendering the sides of its voxels according to their neighboring voxels.
-- <code>DONE</code>The terrain (and other relevant game objects) that are on the camera-side of the player will be disabled, with the exception of the row right in front of the player. This way, nothing unintentionally blocks the view and things like treasure chests and NPCs, which must be in the rows adjacent to the player's track anyway, will still be visible.
-
-## Game Mechanics
-
-### Aiming System <code>DONE</code>
-- A crosshair is displayed on the HUD whenever it is relevant.
-- The crosshair behaves like it does in Worms, so it can move in an arc of 180 degrees around the player.
-- When the button for a 'projectile' item is pressed, the player starts charging, as visualized by an, again Worms-like, force meter.
-- When that same button is released, the item is launched at the angle of the crosshair and with the force of the meter.
-- Think of the crosshair and the force meter together as a vector, where the crosshair is the directional component.
+### Voxel-Engine
+- The collision mesh should not be reset during chunk rendering. Right now, all blocks that are sliced away are physically gone. They should only be invisible.
 
 ### Controls
-- The controls will be similar to zelda.
-- An item can be mapped to each of the D-Pad buttons from the inventory.
-- If the player presses a D-Pad button, that item is activated, so in case of a bomb, the player will now hold a bomb.
-- The A Button will always be used for jumping (this is a platformer after all).
-- The X Button will be the primary attack button and it activates whichever item is currently held. If the player is holding a bomb, it will throw the bomb. If the player is holding a sword, it will slash the sword, if the player is holding nothing, it will punch I guess.
-- The B-Button will be context sensitive, so that it can be used to pick up an object, talk to people, open treasure chests, et cetera.
-- The Y Button is still free.
-- The Right Stick, importantly, will be used for camera control. The vertical axis simply controls height and distance, but the horizontal axis will be used to turn the player.
-- The Left Stick will of course be used to walk, but its vertical axis, when not climbing, will be used to aim.
-- The shoulder buttons are still free. As an alternative to the horizontal right stick axis, turning the player can also be mapped to the shoulder buttons.
-- The triggers are still free.
-- How will the player run?
-  - Pushing the left stick button?
-  > Dashing the left stick, like in smash bros?
-  - With the X Button when nothing is equiped (which would mean the player cannot attack in this case, and cannot run when something is equipped)?
-  > With the context sensitive button (currently B, but should be switched with X in this case)?
-  - Make it so that the player jumps on releasing the A Button and runs while the A Button is still pressed (which would mean that the player would forcefully jump when it would stop running)?
+- Make Y the context sensitive button and allow items to be equipped to X, A and B. This means there is no jumping button; instead, there will be a jumping item.
+- I don't know whether the item reserves (D-Pad) are necessary.
+- How should the player run? Is it a standard ability, or should it be an item too? If it is a standard ability, which button should it be?
 
-### Health System <code>done</code>
-- Copied off of Zelda, the player has a certain amount of hearts, each consisting of 4 health units.
+### Enemies
+
+### NPCs
 
 ### Diving, Digging and Flying
 Since the game is viewed entirely from the side, there is inherently an emphasis on vertical movement. Because of that, going underground, under water and into the air are big opportunities. The awesome thing is that the player can see underground and under water before he has a way to dig and swim, as the terrain slicing makes everything visible.
-- Make a way to dive.
+- Make diving gear.
 - Make a shovel. It can dig away blocks below the player (but only designated blocks, otherwise the player could get himself stuck too easily) to reach underground caverns.
 - Make a way to fly ssb style, or at least double jump.
 - Maybe even make a place higher than the sky land that is in space with low gravity? Maybe fun to make gravity so low that jumping would launch you too high and kill you, so you need the iron boots to jump lower.
@@ -67,20 +43,9 @@ Since the game is viewed entirely from the side, there is inherently an emphasis
 
 ### Treasure Chests
 - What is the best way to implement different content for treasure chests? Can I set a function name as a variable, or should I use a GameObject?
+- POSSIBLE ANSWER TO ABOVE POINT: USE SUBCLASSES FOR OBJECT INHERITANCE AND INHERIT THE open() METHOD
 - Make the treasure chest script.
-
-### Items
-- <code>DONE</code>Make an inventory from where the player can bind items to the d-pad and a and x buttons.
-- Make a sword.
-
-### Enemies
-- Make a prototype enemy.
 
 ### Time and Weather
 - Make a moon.
 - Make a script for the weather controller that spawns clouds and makes it rain, snow and thunder.
-
-## Gameplay
-
-### Puzzle Elements
-- A gimmicky but fun puzzle element could be a two-way crossroads that can be spun around, so that you can only walk certain ways when the crossroads is in the correct orientation. This is a blatant copy of this type of rooms in 2D zelda games. Also, it would only work if the player is bounded by the path.
