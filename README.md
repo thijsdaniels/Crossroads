@@ -15,6 +15,10 @@
 ### Enemies
 
 ### NPCs
+- Walk along waypoints.
+- Have an array of text to say.
+- May have an item they are looking for.
+- Can call custom script, so that they may behave like a treasure chest or a lever.
 
 ### Diving, Digging and Flying
 Since the game is viewed entirely from the side, there is inherently an emphasis on vertical movement. Because of that, going underground, under water and into the air are big opportunities. The awesome thing is that the player can see underground and under water before he has a way to dig and swim, as the terrain slicing makes everything visible.

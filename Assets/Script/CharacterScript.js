@@ -1,16 +1,17 @@
 #pragma strict
 
-public var path: Vector2[];
-private var pathIndex: int = 0;
+public var path: Vector3[];
+private var waypoint: int = 0;
+private var moving: boolean = true;
 public var speed: float = 1;
 public var speech: String[];
 
 function Start () {
-	StartPath();
+	
 }
 
 function Update () {
-
+	if (path.length > 0 && moving) FollowPath();
 }
 
 function OnTriggerEnter(other: Collider) {
@@ -36,8 +37,10 @@ function Speak() {
 	hudScript.DisplayText(speech);
 }
 
-function StartPath() {
-	//TODO cycle movement to waypoints
+function FollowPath() {
+	if (transform.position == path[waypoint]) waypoint = (waypoint + 1) % path.length;
+	var step = speed * Time.deltaTime;
+	transform.position = Vector3.MoveTowards(transform.position, path[waypoint], step);
 }
 
 function PausePath() {
