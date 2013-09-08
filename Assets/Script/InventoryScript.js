@@ -7,6 +7,7 @@ public var selection: GUIText;
 private var item: Item;
 
 private var playerScript: PlayerScript;
+private var overlay: GUITexture;
 private var blurEffect: BlurEffect;
 private var desaturationEffect: ColorCorrectionCurves;
 private var timeScaleOnOpen: float;
@@ -46,6 +47,7 @@ public var bowProjectile: GameObject;
 
 function Start () {
 	playerScript = player.GetComponent(PlayerScript);
+	overlay = GameObject.Find('HUD/Overlay').GetComponent(GUITexture);
 	blurEffect = Camera.main.GetComponent(BlurEffect);
 	desaturationEffect = Camera.main.GetComponents(ColorCorrectionCurves)[1];
 	
@@ -159,6 +161,7 @@ public function Open() {
 		playerScript.StopListening();
 		timeScaleOnOpen = Time.timeScale;
 		Time.timeScale = 0;
+		overlay.enabled = true;
 		blurEffect.enabled = true;
 		desaturationEffect.enabled = true;
 		open = true;
@@ -177,10 +180,9 @@ public function Open() {
 		}
 		
 		// instantiate the cursor
-		cursorObject = Instantiate(cursor, Vector3.zero, Quaternion.identity);
+		cursorObject = Instantiate(cursor, Vector3(0, 0, -1), Quaternion.identity);
 		UpdateCursorPosition();
 		selection.enabled = true;
-		
 	}
 }
 
@@ -198,11 +200,11 @@ private function Close() {
 	
 		// finalize
 		Time.timeScale = timeScaleOnOpen;
+		overlay.enabled = false;
 		blurEffect.enabled = false;
 		desaturationEffect.enabled = false;
 		open = false;
 		playerScript.StartListening();
-		
 	}
 }
 

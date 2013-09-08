@@ -34,7 +34,7 @@ function SetSpeech(_speech: String[]) {
 
 function Speak() {
 	var hudScript = GameObject.Find('HUD').GetComponent(HUDScript);
-	hudScript.DisplayText(speech);
+	hudScript.DisplayText(speech, this);
 }
 
 function FollowPath() {
@@ -44,5 +44,9 @@ function FollowPath() {
 }
 
 function PausePath() {
-	//TODO stop movement to waypoints
+	moving = false;
+}
+
+function ContinuePath() {
+	moving = true;
 }

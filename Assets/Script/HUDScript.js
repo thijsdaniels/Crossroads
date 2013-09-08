@@ -1,7 +1,9 @@
 #pragma strict
-/* This sript cooperates with the main player script to update
+/**
+ * This sript cooperates with the main player script to update
  * the elements of the user interface. As such, it forms the link
- * between the Player and the UI. */
+ * between the Player and the UI.
+ */
 
 // player
 private var player: PlayerScript;
@@ -30,6 +32,7 @@ private var contextualActionButton: GUIText;
 
 // text
 private var textField: GUIText;
+private var textBox: GUITexture;
 
 function Start () {
 	
@@ -61,7 +64,8 @@ function Start () {
 	contextualActionButton = contextualActionButtonObject.GetComponent(GUIText);
 
 	// get a reference to the text field
-	textField = GameObject.Find('HUD/TextField').GetComponent(GUIText);	
+	textField = GameObject.Find('HUD/TextField').GetComponent(GUIText);
+	textBox = GameObject.Find('HUD/TextBox').GetComponent(GUITexture);
 }
 
 function Update() {
@@ -146,6 +150,7 @@ function DisplayText(text: String[]) {
 
 	// prepare
 	player.StopListening();
+	textBox.enabled = true;
 	textField.enabled = true;
 
 	// loop through text using a coroutine, pausing while the player reads
@@ -163,6 +168,37 @@ function DisplayText(text: String[]) {
 
 	// finalize
 	textField.enabled = false;
+	textBox.enabled = false;
 	textField.text = '';
+	player.StartListening();
+}
+
+function DisplayText(text: String[], character: CharacterScript) {
+
+	// prepare
+	player.StopListening();
+	player.rigidbody.velocity = Vector3.zero;
+	character.PausePath();
+	textBox.enabled = true;
+	textField.enabled = true;
+
+	// loop through text using a coroutine, pausing while the player reads
+	var textIndex: int = 0;
+	while (textIndex < text.length) {
+
+		// show the current line
+		textField.text = text[textIndex];
+
+		// wait untill the player presses the talk button, then move to the next line
+		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
+		textIndex++;
+		yield;
+	}
+
+	// finalize
+	textField.enabled = false;
+	textBox.enabled = false;
+	textField.text = '';
+	character.ContinuePath();
 	player.StartListening();
 }
