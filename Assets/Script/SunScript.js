@@ -22,7 +22,7 @@ function Update() {
 }
 
 function AdjustSunLighting() {
-	light.intensity = Mathf.Min(150, Mathf.Max(0, transform.position.y)) / 100;
+	light.intensity = Mathf.Min(200, Mathf.Max(0, transform.position.y)) / 200;
 }
 
 function AdjustAmbientLighting() {

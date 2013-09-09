@@ -158,7 +158,7 @@ function DisplayText(text: String[]) {
 	while (textIndex < text.length) {
 
 		// show the current line
-		textField.text = text[textIndex];
+		printLine(text[textIndex]);
 
 		// wait untill the player presses the talk button, then move to the next line
 		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
@@ -187,7 +187,7 @@ function DisplayText(text: String[], character: CharacterScript) {
 	while (textIndex < text.length) {
 
 		// show the current line
-		textField.text = text[textIndex];
+		printLine(text[textIndex]);
 
 		// wait untill the player presses the talk button, then move to the next line
 		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
@@ -201,4 +201,14 @@ function DisplayText(text: String[], character: CharacterScript) {
 	textField.text = '';
 	character.ContinuePath();
 	player.StartListening();
+}
+
+function printLine(text: String) {
+
+	textField.text = '';
+	for (var i = 0; i < text.length; i++) {
+		textField.text += text[i];
+		yield;
+	}
+	yield;
 }
