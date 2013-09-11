@@ -71,8 +71,6 @@ function Start () {
 	items[3,2] = new MegatonHammer(playerScript, megatonHammerIcon);
 	items[4,2] = new MagicWand(playerScript, magicWandIcon);
 
-	items[3,0].Unlock();
-	items[4,0].Unlock();
 	items[2,1].Unlock();
 }
 

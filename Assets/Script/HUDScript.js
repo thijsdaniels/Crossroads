@@ -153,16 +153,10 @@ function DisplayText(text: String[]) {
 	textBox.enabled = true;
 	textField.enabled = true;
 
-	// loop through text using a coroutine, pausing while the player reads
-	var textIndex: int = 0;
-	while (textIndex < text.length) {
-
-		// show the current line
-		printLine(text[textIndex]);
-
-		// wait untill the player presses the talk button, then move to the next line
+	// loop through text using a coroutine, pausing until the player confirms
+	for (var i = 0; i < text.length; i++) {
+		printLine(text[i]);
 		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
-		textIndex++;
 		yield;
 	}
 
@@ -182,16 +176,10 @@ function DisplayText(text: String[], character: CharacterScript) {
 	textBox.enabled = true;
 	textField.enabled = true;
 
-	// loop through text using a coroutine, pausing while the player reads
-	var textIndex: int = 0;
-	while (textIndex < text.length) {
-
-		// show the current line
-		printLine(text[textIndex]);
-
-		// wait untill the player presses the talk button, then move to the next line
+	// loop through text using a coroutine, pausing until the player confirms
+	for (var i = 0; i < text.length; i++) {
+		printLine(text[i]);
 		while (!Input.GetButtonUp(player.BUTTON_TALK)) yield;
-		textIndex++;
 		yield;
 	}
 
@@ -210,5 +198,4 @@ function printLine(text: String) {
 		textField.text += text[i];
 		yield;
 	}
-	yield;
 }

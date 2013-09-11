@@ -260,9 +260,6 @@ function OnTriggerEnter(trigger: Collider) {
 	case 'Ladder':
 		nearbyClimbables++;
 		break;
-	case 'TreasureChest':
-		SetContextAction('Open', trigger.gameObject, OpenTreasureChest);
-		break;
 	}
 }
 
@@ -280,9 +277,6 @@ function OnTriggerExit(trigger: Collider) {
 		if (nearbyClimbables == 0) {
 			StopClimbing();
 		}
-		break;
-	case 'TreasureChest':
-		ClearContextAction();
 		break;
 	}
 }
@@ -623,11 +617,6 @@ function ClearContextAction() {
 	contextName = 'none';
 	contextAction = null;
 	contextObject = null;
-}
-
-function OpenTreasureChest(treasureChest: GameObject) {
-	Debug.Log('opened chest');
-	ClearContextAction();
 }
 
 
