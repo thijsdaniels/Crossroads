@@ -56,11 +56,14 @@ function Start () {
 	ySpacing = (1 - yMargin * 2) / (items.GetLength(1) - 1);
 	
 	// initialize inventory
+	// find a better, more flexible way to do this, probably using static variables in the item script somehow
 	items[0,0] = new Ocarina(playerScript, ocarinaIcon);
 	items[1,0] = new Lantern(playerScript, lanternIcon);
 	items[2,0] = null;
 	items[3,0] = new Shovel(playerScript, shovelIcon);
 	items[4,0] = new BombBag(playerScript, bombBagIcon, bombBagInstance);
+	items[5,0] = null;
+	items[0,1] = null;
 	items[1,1] = new Hookshot(playerScript, hookshotIcon);
 	items[2,1] = new Bow(playerScript, bowIcon, bowInstance);
 	items[3,1] = new Sword(playerScript, swordIcon, swordInstance);
@@ -71,7 +74,10 @@ function Start () {
 	items[2,2] = null;
 	items[3,2] = new MegatonHammer(playerScript, megatonHammerIcon);
 	items[4,2] = new MagicWand(playerScript, magicWandIcon);
+	items[5,2] = null;
 
+	items[3,0].Unlock();
+	items[4,0].Unlock();
 	items[2,1].Unlock();
 	items[3,1].Unlock();
 }

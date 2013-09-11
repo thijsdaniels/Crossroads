@@ -1,13 +1,5 @@
 #pragma strict
 
-function Start () {
-	
-}
-
-function Update () {
-
-}
-
 class Item {
 
 	public var player: GameObject;

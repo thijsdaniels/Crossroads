@@ -38,9 +38,9 @@ function Follow() {
 	
 	// transform position
 	var playerOrientation: float = player.transform.localEulerAngles.y / (180 / Mathf.PI);
-	transform.position.x += (player.transform.position.x + (distance * Mathf.Cos(playerOrientation)) - transform.position.x) / followDelayFactor;
+	transform.position.x += (player.transform.position.x + (distance * player.GetComponent(PlayerScript).GetPlayerDirection() * Mathf.Cos(playerOrientation)) - transform.position.x) / followDelayFactor;
 	transform.position.y += ((player.transform.position.y + angle) - transform.position.y) / followDelayFactor;
-	transform.position.z += (player.transform.position.z - (distance * Mathf.Sin(playerOrientation)) - transform.position.z) / followDelayFactor;
+	transform.position.z += (player.transform.position.z - (distance * Mathf.Sin(player.GetComponent(PlayerScript).GetPlayerDirection() * playerOrientation)) - transform.position.z) / followDelayFactor;
 	
 	// transfom orientation
 	transform.LookAt(player.transform);

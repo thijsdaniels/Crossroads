@@ -29,10 +29,8 @@ function Update () {
 }
 
 function OnTriggerEnter(other: Collider) {
-	Debug.Log('something hit');
 	var healthScript: HealthScript = other.gameObject.GetComponent(HealthScript);
 	if (healthScript) {
-		Debug.Log('health found');
 		healthScript.InstantDamage(damage);
 	}
 }

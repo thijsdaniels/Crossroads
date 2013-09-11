@@ -16,7 +16,7 @@ function Follow() {
 	transform.position.x = target.position.x;
 	transform.position.y = target.position.y + distance;
 	transform.position.z = target.position.z;
-	transform.localEulerAngles.y = target.localEulerAngles.y - 90;
+	transform.localEulerAngles.y = Camera.main.transform.localEulerAngles.y;
 }
 
 function OnPreRender() {

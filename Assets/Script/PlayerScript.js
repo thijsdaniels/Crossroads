@@ -55,7 +55,7 @@ public var accelerationSpeed: float = 40;
 
 // land mechanics
 private var direction: int;
-private var directionMargin: float = 0.8;
+private var directionMargin: float = 0;
 private var verticalBounds: float;
 private var crossroads: Collider = null;
 private var trackAxis: int;
@@ -93,8 +93,8 @@ public var cameraSwoop: AudioClip;
 public var playerJump: AudioClip;
 public var playerThrow: AudioClip;
 
-// turning
-private var turnNotice: GameObject;
+// notice
+private var notice: GameObject;
 
 
 ///////////////////////////////
@@ -123,8 +123,8 @@ function Start() {
 	// get a reference to the swimming script
 	swimScript = gameObject.GetComponent(SwimScript);
 
-	turnNotice = GameObject.Find('Player/TurnNotice').gameObject;
-	
+	// get a reference to the notice object
+	notice = GameObject.Find('Player/Notice').gameObject;
 }
 
 
@@ -252,7 +252,9 @@ function OnTriggerEnter(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
 		crossroads = trigger;
-		turnNotice.renderer.enabled = true;
+		for (var child: Transform in notice.transform) {
+			child.gameObject.renderer.enabled = true;
+		}
 		break;
 	case 'Track Adjuster':
 		if (!IsParallel(trigger.transform)) {
@@ -275,7 +277,9 @@ function OnTriggerExit(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
 		crossroads = null;
-		turnNotice.renderer.enabled = false;
+		for (var child: Transform in notice.transform) {
+			child.gameObject.renderer.enabled = false;
+		}
 		break;
 	case 'Ladder':
 		if (nearbyClimbables > 0) {
@@ -319,11 +323,15 @@ function IsRunning(): boolean {
 function Move(movement: float) {
 
 	// update the direction
-	if (movement > directionMargin) {
+	if (movement > directionMargin && direction == LEFT) {
+		transform.eulerAngles.y += 180;
 		direction = RIGHT;
-	} else if (movement < -directionMargin) {
+	} else if (movement < -directionMargin && direction == RIGHT) {
+		transform.eulerAngles.y += 180;
 		direction = LEFT;
 	}
+
+	movement = Mathf.Abs(movement);
 	
 	// calculate the acceleration
 	var Acc_groundedFactor: float = IsGrounded() ? 1 : 0.5;
@@ -333,15 +341,15 @@ function Move(movement: float) {
 	var Max_runningMaxFactor: float = IsRunning() ? 1.5 : 1;
 	var Max_groundedMaxFactor: float = IsGrounded() ? 1 : 0.75;
 	var currentForwardVelocity: float = SumVector(Vector3.Scale(rigidbody.velocity, transform.forward));
-	if (movement > 0) {
+	//if (movement > 0) {
 		if (currentForwardVelocity + acceleration > (maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
 			acceleration = 0;
 		}
-	} else if (movement < 0) {
-		if (currentForwardVelocity - acceleration < (-maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
-			acceleration = 0;
-		}
-	}
+	//} else if (movement < 0) {
+		//if (currentForwardVelocity - acceleration < (-maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
+			//acceleration = 0;
+		//}
+	//}
 
 	// accelerate the player
 	rigidbody.AddForce(transform.forward * acceleration, ForceMode.VelocityChange);
@@ -531,7 +539,8 @@ function Flip(clockDirection: int) {
 	cameraTrack.pitch = 1 - ((clockDirection == EnvironmentScript.CLOCKWISE) ? 0.1 : 0) - (0.1 * Random.value);
 	cameraTrack.PlayOneShot(cameraSwoop);
 	cameraTrack.pitch = 1;
-	EnvironmentScript.Slice(GetTrackAxis(), GetTrackPosition(), Mathf.Repeat(GetDirection(this.transform) - 1 + 2, 4));
+	var direction = Mathf.Repeat((GetPlayerDirection() - 1) + (GetDirection(this.transform) - 1) + 2, 4);
+	EnvironmentScript.Slice(GetTrackAxis(), GetTrackPosition(), direction);
 	
 	// rotate
 	for (var i = 0; i < iterations; i++) {
@@ -554,7 +563,8 @@ function Turn(clockDirection: int, track: Transform) {
 	cameraTrack.pitch = 1;
 	var newTrackAxis = GetPerpendicularAxis(GetTrackAxis());
 	var newTrackPosition = GetAxisPosition(newTrackAxis, track);
-	EnvironmentScript.Slice(newTrackAxis, newTrackPosition, Mathf.Repeat(GetDirection(this.transform) - 1 + clockDirection, 4));
+	var direction = Mathf.Repeat((GetPlayerDirection() - 1) + (GetDirection(this.transform) - 1) + clockDirection, 4);
+	EnvironmentScript.Slice(newTrackAxis, newTrackPosition, direction);
 	
 	// rotate and translate
 	var iterations: int = 90 / rotationSpeed;
@@ -719,7 +729,7 @@ function Throw(speedFactor: float) {
 		var aimAngleRads = aimAngle * (Mathf.PI / 180);
 		throwing.rigidbody.velocity = 
 			this.rigidbody.velocity + 
-			(GetPlayerDirection() * aimCharge * speedFactor * transform.forward * Mathf.Cos(aimAngleRads)) + 
+			(aimCharge * speedFactor * transform.forward * Mathf.Cos(aimAngleRads)) + 
 			(aimCharge * speedFactor * transform.up * Mathf.Sin(aimAngleRads));
 		vocalTrack.PlayOneShot(playerThrow);
 	}
