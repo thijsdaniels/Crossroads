@@ -40,10 +40,11 @@ public var ocarinaIcon: GUITexture;
 public var shovelIcon: GUITexture;
 public var swordIcon: GUITexture;
 
-// item projectiles
-public var bombBagProjectile: GameObject;
-public var boomerangProjectile: GameObject;
-public var bowProjectile: GameObject;
+// item instances
+public var bombBagInstance: GameObject;
+public var boomerangInstance: GameObject;
+public var bowInstance: GameObject;
+public var swordInstance: GameObject;
 
 function Start () {
 	playerScript = player.GetComponent(PlayerScript);
@@ -59,12 +60,12 @@ function Start () {
 	items[1,0] = new Lantern(playerScript, lanternIcon);
 	items[2,0] = null;
 	items[3,0] = new Shovel(playerScript, shovelIcon);
-	items[4,0] = new BombBag(playerScript, bombBagIcon, bombBagProjectile);
+	items[4,0] = new BombBag(playerScript, bombBagIcon, bombBagInstance);
 	items[1,1] = new Hookshot(playerScript, hookshotIcon);
-	items[2,1] = new Bow(playerScript, bowIcon, bowProjectile);
-	items[3,1] = new Sword(playerScript, swordIcon);
+	items[2,1] = new Bow(playerScript, bowIcon, bowInstance);
+	items[3,1] = new Sword(playerScript, swordIcon, swordInstance);
 	items[4,1] = null;
-	items[5,1] = new Boomerang(playerScript, boomerangIcon, boomerangProjectile);
+	items[5,1] = new Boomerang(playerScript, boomerangIcon, boomerangInstance);
 	items[0,2] = new LensOfTruth(playerScript, lensOfTruthIcon);
 	items[1,2] = null;
 	items[2,2] = null;
@@ -72,6 +73,7 @@ function Start () {
 	items[4,2] = new MagicWand(playerScript, magicWandIcon);
 
 	items[2,1].Unlock();
+	items[3,1].Unlock();
 }
 
 function Update () {
@@ -108,19 +110,16 @@ function Update () {
 		
 		// item selection
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_PRIMARY)) {
-			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				playerScript.primaryItem = item;
 			}
 		}
 		if (Input.GetButtonDown(PlayerScript.BUTTON_ITEM_SECONDARY)) {
-			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				playerScript.secondaryItem = item;
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL)) {
-			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_VERTICAL) > 0) {
 					playerScript.firstReserve = item;
@@ -130,7 +129,6 @@ function Update () {
 			}
 		}
 		if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL)) {
-			//item = items[cursorPosition.x, cursorPosition.y];
 			if (item != null && item.IsUnlocked()) {
 				if (Input.GetAxis(PlayerScript.AXIS_RESERVE_HORIZONTAL) > 0) {
 					playerScript.secondReserve = item;

@@ -93,6 +93,9 @@ public var cameraSwoop: AudioClip;
 public var playerJump: AudioClip;
 public var playerThrow: AudioClip;
 
+// turning
+private var turnNotice: GameObject;
+
 
 ///////////////////////////////
 ///////// CONSTRUCTOR /////////
@@ -119,6 +122,8 @@ function Start() {
 	
 	// get a reference to the swimming script
 	swimScript = gameObject.GetComponent(SwimScript);
+
+	turnNotice = GameObject.Find('Player/TurnNotice').gameObject;
 	
 }
 
@@ -247,6 +252,7 @@ function OnTriggerEnter(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
 		crossroads = trigger;
+		turnNotice.renderer.enabled = true;
 		break;
 	case 'Track Adjuster':
 		if (!IsParallel(trigger.transform)) {
@@ -269,6 +275,7 @@ function OnTriggerExit(trigger: Collider) {
 	switch (trigger.tag) {
 	case 'Crossroads':
 		crossroads = null;
+		turnNotice.renderer.enabled = false;
 		break;
 	case 'Ladder':
 		if (nearbyClimbables > 0) {

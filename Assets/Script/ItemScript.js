@@ -16,7 +16,7 @@ class Item {
 	public var name;
 	public var unlocked: boolean;
 	public var icon: GUITexture;
-	public var projectile: GameObject;
+	public var instance: GameObject;
 
 	function IsUnlocked() {
 		return unlocked;
@@ -30,36 +30,30 @@ class Item {
 		return icon;
 	}
 
-	function GetProjectile() {
-		return projectile;
+	function GetInstance() {
+		return instance;
 	}
 
-	function Press() {
+	function Press() {}
 
-	}
+	function Hold() {}
 
-	function Hold() {
-
-	}
-
-	function Release() {
-
-	}
+	function Release() {}
 
 }
 
 class BombBag extends Item {
 
-	public function BombBag(_playerScript: PlayerScript, _icon: GUITexture, _projectile: GameObject) {
+	public function BombBag(_playerScript: PlayerScript, _icon: GUITexture, _instance: GameObject) {
 		playerScript = _playerScript;
 		name = 'Bomb Bag';
 		icon = _icon;
-		projectile = _projectile;
+		instance = _instance;
 	}
 
 	function Press() {
 		if (!playerScript.IsSwimming() && !playerScript.IsCarrying()) {
-			playerScript.Draw(projectile);
+			playerScript.Draw(instance);
 		}
 	}
 
@@ -78,26 +72,26 @@ class BombBag extends Item {
 
 class Boomerang extends Item {
 
-	public function Boomerang(_playerScript: PlayerScript, _icon: GUITexture, _projectile: GameObject) {
+	public function Boomerang(_playerScript: PlayerScript, _icon: GUITexture, _instance: GameObject) {
 		playerScript = _playerScript;
 		name = 'Boomerang';
 		icon = _icon;
-		projectile = _projectile;
+		instance = _instance;
 	}
 }
 
 class Bow extends Item {
 
-	public function Bow(_playerScript: PlayerScript, _icon: GUITexture, _projectile: GameObject) {
+	public function Bow(_playerScript: PlayerScript, _icon: GUITexture, _instance: GameObject) {
 		playerScript = _playerScript;
 		name = 'Bow';
 		icon = _icon;
-		projectile = _projectile;
+		instance = _instance;
 	}
 
 	function Press() {
 		if (!playerScript.IsSwimming() && !playerScript.IsCarrying()) {
-			playerScript.Draw(projectile);
+			playerScript.Draw(instance);
 		}
 	}
 
@@ -191,9 +185,25 @@ class Shovel extends Item {
 
 class Sword extends Item {
 
-	public function Sword(_playerScript: PlayerScript, _icon: GUITexture) {
+	private var previousInstance: GameObject;
+
+	public function Sword(_playerScript: PlayerScript, _icon: GUITexture, _instance: GameObject) {
 		playerScript = _playerScript;
 		name = 'Sword';
 		icon = _icon;
+		instance = _instance;
+	}
+
+	function Hold() {
+		if (!playerScript.IsSwimming() && !playerScript.IsCarrying()) {
+			// charge swing
+		}
+	}
+
+	function Release() {
+		if (!playerScript.IsSwimming() && !playerScript.IsCarrying()) {
+			if (previousInstance) playerScript.Destroy(previousInstance);
+			previousInstance = playerScript.Instantiate(instance, playerScript.transform.position, Quaternion.identity);
+		}
 	}
 }
