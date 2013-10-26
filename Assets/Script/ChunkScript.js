@@ -1,7 +1,7 @@
 #pragma strict
 
 // constants
-public static var CHUNK_SIZE: int = 16;
+public static var CHUNK_SIZE: Vector2 = Vector2(32, 64);
 public static var AHEAD: int = -1;
 public static var INTERSECT: int = 0;
 public static var BEHIND: int = 1;
@@ -21,17 +21,19 @@ function Update () {
 }
 
 // initializes the chunk
-public function Initialize() {
+public function Initialize(xIndex: int, yIndex: int, zIndex: int) {
+
+	this.position = Vector3(xIndex, yIndex, zIndex);
 	
 	// get mesh components
 	meshFilter = GetComponent(MeshFilter);
 	meshCollider = GetComponent(MeshCollider);
 
 	// build the chunk
-	blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
-	for (var x = 0; x < CHUNK_SIZE; x++) {
-		for (var y = 0; y < CHUNK_SIZE; y++) {
-			for (var z = 0; z < CHUNK_SIZE; z++) {
+	blocks = new Block[CHUNK_SIZE.x, CHUNK_SIZE.y, CHUNK_SIZE.x];
+	for (var x = 0; x < CHUNK_SIZE.x; x++) {
+		for (var y = 0; y < CHUNK_SIZE.y; y++) {
+			for (var z = 0; z < CHUNK_SIZE.x; z++) {
 				var terrainIndex = TerrainScript.Position2Index(transform.position + Vector3(x, y, z));
 				if (InRange(terrainIndex)) {
 					var type = TerrainScript.TERRAIN[terrainIndex.x, terrainIndex.y, terrainIndex.z];
@@ -42,9 +44,6 @@ public function Initialize() {
 			}
 		}
 	}
-	
-	// render the chunk
-	Render();
 }
 
 function InRange(position: Vector3): boolean {
@@ -69,9 +68,9 @@ public function Render() {
 	var triangles = new Array();
 	var uv = new Array();
 
-	for (var x = 0; x < CHUNK_SIZE; x++) {
-		for (var y = 0; y < CHUNK_SIZE; y++) {
-			for (var z = 0; z < CHUNK_SIZE; z++) {
+	for (var x = 0; x < CHUNK_SIZE.x; x++) {
+		for (var y = 0; y < CHUNK_SIZE.y; y++) {
+			for (var z = 0; z < CHUNK_SIZE.x; z++) {
 
 				var position = Vector3(x, y, z);
 				var block: Block = this.blocks[x, y, z];
@@ -252,11 +251,68 @@ public function Render() {
 
 // checks whether a space is occupied
 public function IsOccupied(position: Vector3, ignoreTranslucent: boolean): boolean {
-	
-	// if the position is not in range, assume that the position is not occupied
-	//TODO better than this assumption would be a check in the adjacent chunk
-	if (position.x < 0 || position.y < 0 || position.z < 0 || position.x >= CHUNK_SIZE || position.y >= CHUNK_SIZE || position.z >= CHUNK_SIZE) {
-		return false;
+
+	var neighbor: GameObject;
+	var neighborScript: ChunkScript;
+
+	if (position.x < 0) {
+		if (this.position.x > 0) {
+			neighbor = TerrainScript.CHUNKS[this.position.x - 1, this.position.y, this.position.z];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x + CHUNK_SIZE.x, position.y, position.z), ignoreTranslucent);
+		} else {
+			return false;
+		}
+	}
+
+	if (position.x >= CHUNK_SIZE.x) {
+		if (this.position.x < Mathf.Ceil(TerrainScript.TERRAIN_SIZE.x / CHUNK_SIZE.x) - 1) {
+			neighbor = TerrainScript.CHUNKS[this.position.x + 1, this.position.y, this.position.z];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x - CHUNK_SIZE.x, position.y, position.z), ignoreTranslucent);
+		} else {
+			return false;
+		}
+	}
+
+	if (position.y < 0) {
+		if (this.position.y > 0) {
+			neighbor = TerrainScript.CHUNKS[this.position.x, this.position.y - 1, this.position.z];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x, position.y + CHUNK_SIZE.y, position.z), ignoreTranslucent);
+		} else {
+			return false;
+		}
+	}
+
+	if (position.y >= CHUNK_SIZE.y) {
+		if (this.position.y < Mathf.Ceil(TerrainScript.TERRAIN_SIZE.y / CHUNK_SIZE.y) - 1) {
+			neighbor = TerrainScript.CHUNKS[this.position.x, this.position.y + 1, this.position.z];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x, position.y - CHUNK_SIZE.y, position.z), ignoreTranslucent);
+		} else {
+			return false;
+		}
+	}
+
+	if (position.z < 0) {
+		if (this.position.z > 0) {
+			neighbor = TerrainScript.CHUNKS[this.position.x, this.position.y, this.position.z - 1];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x, position.y, position.z + CHUNK_SIZE.x), ignoreTranslucent);
+		} else {
+			return false;
+		}
+	}
+
+	if (position.z >= CHUNK_SIZE.x) {
+		if (this.position.z < Mathf.Ceil(TerrainScript.TERRAIN_SIZE.z / CHUNK_SIZE.x) - 1) {
+			neighbor = TerrainScript.CHUNKS[this.position.x, this.position.y, this.position.z + 1];
+			neighborScript = neighbor.GetComponent(ChunkScript);
+			return neighborScript.IsOccupied(Vector3(position.x, position.y, position.z - CHUNK_SIZE.x), ignoreTranslucent);
+		} else {
+			return false;
+		}
 	}
 	
 	// check the position for a block
@@ -291,7 +347,7 @@ public function GetSlicePosition(axis: int, position: int, direction: int): int 
 	}
 
 	if (position >= chunkPosition) {
-		if (position <= chunkPosition + CHUNK_SIZE) {
+		if (position <= chunkPosition + CHUNK_SIZE.x) {
 			return INTERSECT;
 		}
 		return (reverseDirection) ? BEHIND : AHEAD;
@@ -301,9 +357,9 @@ public function GetSlicePosition(axis: int, position: int, direction: int): int 
 
 public function Slice(axis: int, position: int, direction: int) {
 	var different = false;
-	for (var x = 0; x < CHUNK_SIZE; x++) {
-		for (var y = 0; y < CHUNK_SIZE; y++) {
-			for (var z = 0; z < CHUNK_SIZE; z++) {
+	for (var x = 0; x < CHUNK_SIZE.x; x++) {
+		for (var y = 0; y < CHUNK_SIZE.y; y++) {
+			for (var z = 0; z < CHUNK_SIZE.x; z++) {
 				var block: Block = blocks[x, y, z];
 				if (block != null) {
 					if (axis == EnvironmentScript.X_AXIS) {
@@ -382,9 +438,9 @@ public function Show() {
 }
 
 public function ShowAll() {
-	for (var x = 0; x < CHUNK_SIZE; x++) {
-		for (var y = 0; y < CHUNK_SIZE; y++) {
-			for (var z = 0; z < CHUNK_SIZE; z++) {
+	for (var x = 0; x < CHUNK_SIZE.x; x++) {
+		for (var y = 0; y < CHUNK_SIZE.y; y++) {
+			for (var z = 0; z < CHUNK_SIZE.x; z++) {
 				var block: Block = blocks[x, y, z];
 				if (block != null) {
 					block.SetActive(true);
@@ -392,8 +448,8 @@ public function ShowAll() {
 			}
 		}
 	}
-	Render();
 	Show();
+	Render();
 }
 
 //////////////////////////////

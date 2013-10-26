@@ -6,16 +6,53 @@ public static var TERRAIN_OFFSET: Vector3;
 public static var TERRAIN: int[,,];
 public static var CHUNKS: GameObject[,,];
 
+public var generate: boolean = false;
+public var heightmap: Texture2D;
 public var chunkPrefab: GameObject;
 
 function Start () {
-	PrepareTerrain();
-	IndexTerrain();
-	UnsetTerrain();
+	if (generate) {
+		GenerateTerrain();
+	}
+	else {
+		PrepareTerrain();
+		IndexTerrain();
+		UnsetTerrain();
+	}
 	CreateChunks();
 }
 
 function Update () {
+}
+
+// generates terrain using perlin noise (mostly for fun, but useful for tweaking performance)
+function GenerateTerrain() {
+	
+	TERRAIN_SIZE =  Vector3(heightmap.width, 64, heightmap.height);
+	TERRAIN_OFFSET = Vector3(0, 0, 0);
+
+	var heightOffset = 0;
+	
+	TERRAIN = new int[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
+	
+	for (var x: int = 0; x < TERRAIN_SIZE.x; x++) {
+		for (var z: int = 0; z < TERRAIN_SIZE.z; z++) {
+
+			var height = heightOffset + Mathf.Ceil(heightmap.GetPixel(x, z).grayscale * (TERRAIN_SIZE.y - heightOffset));
+
+			for (var y: int = 0; y < TERRAIN_SIZE.y; y++) {
+				
+				var type = 2;
+				if (y == height - 1) type = 1;
+				if (y < height - 10) type = 3;
+
+				if (y >= height) continue;
+				
+				TERRAIN[x, y, z] = type;
+			}
+		}
+	}
+	
 }
 
 function PrepareTerrain() {
@@ -115,25 +152,27 @@ function CreateChunks() {
 	var startTime = Time.realtimeSinceStartup * 1000;
 
 	// calculate the number of chunks
-	var worldSize = Vector3(Mathf.Ceil(TERRAIN_SIZE.x / ChunkScript.CHUNK_SIZE), Mathf.Ceil(TERRAIN_SIZE.y / ChunkScript.CHUNK_SIZE), Mathf.Ceil(TERRAIN_SIZE.z / ChunkScript.CHUNK_SIZE));
+	var worldSize = Vector3(Mathf.Ceil(TERRAIN_SIZE.x / ChunkScript.CHUNK_SIZE.x), Mathf.Ceil(TERRAIN_SIZE.y / ChunkScript.CHUNK_SIZE.y), Mathf.Ceil(TERRAIN_SIZE.z / ChunkScript.CHUNK_SIZE.x));
 
-	// initialize chunk array
+	// initialize chunks
 	CHUNKS = new GameObject[worldSize.x, worldSize.y, worldSize.z];
 	for (var x = 0; x < worldSize.x; x++) {
 		for (var y = 0; y < worldSize.y; y++) {
 			for (var z = 0; z < worldSize.z; z++) {
 			
 				// instantiate a chunk
-				var position = Index2Position(Vector3(x, y, z) * ChunkScript.CHUNK_SIZE);
+				var position = Index2Position(Vector3(x * ChunkScript.CHUNK_SIZE.x, y * ChunkScript.CHUNK_SIZE.y, z * ChunkScript.CHUNK_SIZE.x));
 				var chunk: GameObject = Instantiate(chunkPrefab, position, Quaternion.identity);
 				CHUNKS[x, y, z] = chunk;
 				
 				// initialize the chunk
 				var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
-				chunkScript.Initialize();
+				chunkScript.Initialize(x, y, z);
 			}
 		}
 	}
+
+	RenderChunks();
 
 	var numChunks = worldSize.x * worldSize.y * worldSize.z;
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
@@ -170,4 +209,11 @@ public static function Slice(axis: int, position: int, direction: int) {
 
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
 	Debug.Log('TERRAIN: Sliced ' + chunksSliced + ' chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
+}
+
+public static function RenderChunks() {
+	for (var chunk: GameObject in CHUNKS) {
+		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
+		chunkScript.Render();
+	}
 }

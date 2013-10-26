@@ -10,7 +10,7 @@ private var swingTilt: int = 40;
 
 public var damage: int = 2;
 
-function Start () {
+function Start() {
 	player = GameObject.Find('Player');
 	transform.parent = player.transform;
 	startPosition = Vector3(-swingTilt / 2, player.transform.eulerAngles.y - swingDistance / 2, 0);
@@ -18,7 +18,7 @@ function Start () {
 	transform.eulerAngles = startPosition;
 }
 
-function Update () {
+function Update() {
 	swingTime += Time.deltaTime;
 	if (swingTime < swingDuration) {
 		var swingProgress = swingTime * (1f / swingDuration);
