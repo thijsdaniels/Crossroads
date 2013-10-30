@@ -59,23 +59,32 @@ private static function Show(object: GameObject) {
 	//}
 }
 
-public static function Slice(axis: int, position: int, direction: int) {
+public static function Slice(axis: int, position: float, direction: int) {
+
+	// displace the position by the margin of the track
+	if (direction == NORTH || direction == EAST) {
+		position -= TRACK_MARGIN;
+	} else {
+		position += TRACK_MARGIN;
+	}
 
 	// first slice the terrain
 	TerrainScript.Slice(axis, position, direction);
 
 	// then slice the environment
 	var environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT);
+	if (environment == null) return;
+	
 	for (var object: GameObject in environment) {
 		if (axis == X_AXIS) {
 			if (direction == NORTH) {
-				if (object.transform.position.z < position - TRACK_MARGIN) {
+				if (object.transform.position.z < position) {
 					Hide(object);
 				} else {
 					Show(object);
 				}
 			} else if (direction == SOUTH) {
-				if (object.transform.position.z > position + TRACK_MARGIN) {
+				if (object.transform.position.z > position) {
 					Hide(object);
 				} else {
 					Show(object);
@@ -83,13 +92,13 @@ public static function Slice(axis: int, position: int, direction: int) {
 			}
 		} else {
 			if (direction == EAST) {
-				if (object.transform.position.x < position - TRACK_MARGIN) {
+				if (object.transform.position.x < position) {
 					Hide(object);
 				} else {
 					Show(object);
 				}
 			} else if (direction == WEST) {
-				if (object.transform.position.x > position + TRACK_MARGIN) {
+				if (object.transform.position.x > position) {
 					Hide(object);
 				} else {
 					Show(object);

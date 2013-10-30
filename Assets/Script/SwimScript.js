@@ -26,7 +26,7 @@ function FixedUpdate () {
 	
 	// calculate the force of the boyancy
 	var boyancyPoint: Vector3 = transform.position + transform.TransformDirection(floatOffset);
-	var forceFactor: float = 1f - ((boyancyPoint.y - water.position.y));
+	var forceFactor: float = 1f - (boyancyPoint.y - water.renderer.bounds.max.y);
 	
 	if (forceFactor > 0) {
 		StartSwimming();
