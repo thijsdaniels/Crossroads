@@ -67,6 +67,7 @@
      <Compile Include="Assets\Script\TerrainScript.js" />
      <Compile Include="Assets\Script\TimeScript.js" />
      <Compile Include="Assets\Script\TreasureChestScript.js" />
+     <Compile Include="Assets\Script\WaterScript.js" />
      <Compile Include="Assets\Script\WeatherScript.js" />
      <None Include="Assets\Standard Assets\Glass Refraction (Pro Only)\Sources\Shaders\Glass-Stained-BumpDistort.shader" />
      <None Include="Assets\Standard Assets\Image Effects (Pro Only)\_Sources\Shaders\_BloomAndFlares\BlendOneOne.shader" />

@@ -16,6 +16,8 @@ public static var BUTTON_ITEM_PRIMARY = 'X';
 public static var BUTTON_ITEM_SECONDARY = 'Y';
 private static var BUTTON_CONTEXT = 'B';
 private static var AXIS_WALK = 'Left Stick Horizontal';
+private static var AXIS_SWIM_HORIZONTAL = 'Left Stick Horizontal';
+private static var AXIS_SWIM_VERTICAL = 'Left Stick Vertical';
 private static var AXIS_AIM = 'Left Stick Vertical';
 private static var AXIS_CLIMB = 'Left Stick Vertical';
 private static var AXIS_TURN = 'Right Stick Horizontal';
@@ -44,14 +46,14 @@ private var climbing: boolean = false;
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
 private var carrying: GameObject;
 private var swimming: boolean = false;
-private var swimScript: SwimScript;
 
 // speeds
 public var maxSpeed: float = 8;
 public var jumpForce: float = 400;
 public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
 public var climbSpeed: float = 5;
-public var accelerationSpeed: float = 40;
+public var walkSpeed: float = 40;
+public var swimSpeed: float = 10;
 
 // land mechanics
 private var direction: int;
@@ -62,6 +64,9 @@ private var trackAxis: int;
 private var trackPosition: int;
 private var trackAdjuster: Collider = null;
 private var groundedMargin: float = 0.1;
+
+// water mechanics
+public var canDive = false;
 
 // context action
 private var contextName: String = 'none';
@@ -119,9 +124,6 @@ function Start() {
 	
 	// get a reference to the inventory
 	inventoryScript = inventory.GetComponent(InventoryScript);
-	
-	// get a reference to the swimming script
-	swimScript = gameObject.GetComponent(SwimScript);
 
 	// get a reference to the notice object
 	notice = GameObject.Find('Player/Notice').gameObject;
@@ -167,13 +169,19 @@ function CheckInput() {
 	// player actions
 	if (IsListening()) {
 		if (Input.GetAxis(AXIS_WALK)) {
-			Move(Input.GetAxis(AXIS_WALK));
+			Walk(Input.GetAxis(AXIS_WALK));
 		}
 		if (Input.GetAxis(AXIS_CLIMB)) {
 			Climb(Input.GetAxis(AXIS_CLIMB));
 		}
 		if (Input.GetAxis(AXIS_AIM)) {
 			AdjustAim(Input.GetAxis(AXIS_AIM));
+		}
+		if (Input.GetAxis(AXIS_SWIM_HORIZONTAL)) {
+			Swim(transform.forward, Input.GetAxis(AXIS_SWIM_HORIZONTAL));
+		}
+		if (Input.GetAxis(AXIS_SWIM_VERTICAL)) {
+			Swim(transform.up, Input.GetAxis(AXIS_SWIM_VERTICAL));
 		}
 		if (Input.GetButtonDown(BUTTON_JUMP)) {
 			Jump();
@@ -320,9 +328,32 @@ function IsRunning(): boolean {
 }
 
 // moves the player horizontally
-function Move(movement: float) {
+function Walk(movement: float) {
 
-	// update the direction
+	if (!IsSwimming()) {
+
+		// update the direction and remove the directive element of from the movement, since all movement will be done in forwards direction
+		UpdateDirection(movement);
+		movement = Mathf.Abs(movement);
+		
+		// calculate the acceleration
+		var Acc_groundedFactor: float = IsGrounded() ? 1 : 0.5;
+		var acceleration: float =  movement * Time.deltaTime * walkSpeed * Acc_groundedFactor;
+
+		// discard the acceleration if over the maximum
+		var Max_runningMaxFactor: float = IsRunning() ? 1.5 : 1;
+		var Max_groundedMaxFactor: float = IsGrounded() ? 1 : 0.75;
+		var currentForwardVelocity: float = SumVector(Vector3.Scale(rigidbody.velocity, transform.forward));
+		if (currentForwardVelocity + acceleration > (maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
+			acceleration = 0;
+		}
+
+		// accelerate the player
+		rigidbody.AddForce(transform.forward * acceleration, ForceMode.VelocityChange);
+	}
+}
+
+function UpdateDirection(movement: float) {
 	if (movement > directionMargin && direction == LEFT) {
 		transform.eulerAngles.y += 180;
 		direction = RIGHT;
@@ -330,29 +361,6 @@ function Move(movement: float) {
 		transform.eulerAngles.y += 180;
 		direction = LEFT;
 	}
-
-	movement = Mathf.Abs(movement);
-	
-	// calculate the acceleration
-	var Acc_groundedFactor: float = IsGrounded() ? 1 : 0.5;
-	var acceleration: float =  movement * Time.deltaTime * accelerationSpeed * Acc_groundedFactor;
-
-	// discard the acceleration if over the maximum
-	var Max_runningMaxFactor: float = IsRunning() ? 1.5 : 1;
-	var Max_groundedMaxFactor: float = IsGrounded() ? 1 : 0.75;
-	var currentForwardVelocity: float = SumVector(Vector3.Scale(rigidbody.velocity, transform.forward));
-	//if (movement > 0) {
-		if (currentForwardVelocity + acceleration > (maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
-			acceleration = 0;
-		}
-	//} else if (movement < 0) {
-		//if (currentForwardVelocity - acceleration < (-maxSpeed * Max_runningMaxFactor * Max_groundedMaxFactor)) {
-			//acceleration = 0;
-		//}
-	//}
-
-	// accelerate the player
-	rigidbody.AddForce(transform.forward * acceleration, ForceMode.VelocityChange);
 }
 
 // helper method that returns the sum of all components of a vector
@@ -362,7 +370,7 @@ function SumVector(vector: Vector3): float {
 
 // makes the player jump if it is on the ground
 function Jump() {
-	if (IsGrounded() || swimScript.IsFloating()) {
+	if (IsGrounded()) {
 		rigidbody.AddForce(Vector3.up * jumpForce * rigidbody.mass);
 		vocalTrack.PlayOneShot(playerJump);
 	}
@@ -741,6 +749,27 @@ function Throw(speedFactor: float) {
 ///// SWIMMING AND DIVING /////
 ///////////////////////////////
 
-function IsSwimming() {
-	return swimScript.IsSwimming();
+function SetSwimming(mode: boolean) {
+	swimming = mode;
+}
+
+function IsSwimming(): boolean {
+	return swimming;
+}
+
+function CanDive(): boolean {
+	return canDive;
+}
+
+function Swim(axis: Vector3, movement: float) {
+	if (IsSwimming()) {
+
+		if (axis == transform.forward) {
+			UpdateDirection(movement);
+			movement = Mathf.Abs(movement);
+		}
+
+		var force: Vector3 = axis * movement * Time.deltaTime * swimSpeed;
+		rigidbody.AddForce(force, ForceMode.VelocityChange);
+	}
 }

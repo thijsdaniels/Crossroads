@@ -8,14 +8,7 @@ var angle: float = 1;
 var minDistance: float = 5;
 var minAngle: float = 0;
 
-var water: Transform;
-var underWater: boolean = false;
-private var waterFog: GlobalFog;
-private var waterColor: ColorCorrectionCurves;
-
 function Start() {
-	waterFog = GetComponent(GlobalFog);
-	waterColor = GetComponent(ColorCorrectionCurves);
 }
 
 function FixedUpdate() {
@@ -44,25 +37,5 @@ function Follow() {
 	
 	// transfom orientation
 	transform.LookAt(player.transform);
-
-	// toggle water effects when applicable
-	ToggleWaterEffects();
 	
-}
-
-// enables water effects when the camera goes under water and disables otherwise
-function ToggleWaterEffects() {
-	if (transform.position.y <= water.position.y) {
-		if (!underWater) {
-			waterFog.enabled = true;
-			waterColor.enabled = true;
-			underWater = true;
-		}
-	} else {
-		if (underWater) {
-			waterFog.enabled = false;
-			waterColor.enabled = false;
-			underWater = false;
-		}
-	}
 }
