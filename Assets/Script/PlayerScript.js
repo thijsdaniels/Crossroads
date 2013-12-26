@@ -46,6 +46,7 @@ private var climbing: boolean = false;
 private var nearbyClimbables: int = 0; //TODO make ladder prefabs with a single trigger collider so that this variable is no longer necessary
 private var carrying: GameObject;
 private var swimming: boolean = false;
+public var diving: boolean = false; // @todo mark as private after a button or item has been added to control this
 
 // speeds
 public var maxSpeed: float = 8;
@@ -53,7 +54,7 @@ public var jumpForce: float = 400;
 public var rotationSpeed: float = 15; //WARNING must equally divide 90 degrees
 public var climbSpeed: float = 5;
 public var walkSpeed: float = 40;
-public var swimSpeed: float = 10;
+public var swimSpeed: float = 20;
 
 // land mechanics
 private var direction: int;
@@ -64,9 +65,6 @@ private var trackAxis: int;
 private var trackPosition: int;
 private var trackAdjuster: Collider = null;
 private var groundedMargin: float = 0.1;
-
-// water mechanics
-public var canDive = false;
 
 // context action
 private var contextName: String = 'none';
@@ -757,8 +755,8 @@ function IsSwimming(): boolean {
 	return swimming;
 }
 
-function CanDive(): boolean {
-	return canDive;
+function IsDiving(): boolean {
+	return diving;
 }
 
 function Swim(axis: Vector3, movement: float) {

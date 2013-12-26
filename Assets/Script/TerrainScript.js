@@ -99,16 +99,20 @@ function TraverseTerrain(node: GameObject) {
 
 function Visit(block: GameObject) {
 
-	// align block
-	//block.transform.position = Vector3(Mathf.Round(block.transform.position.x), Mathf.Round(block.transform.position.y), Mathf.Round(block.transform.position.z));
-	
+	// @todo align block position
+	// @todo align block rotation
+
+	// correct for rotation
+	var worldScale = block.transform.TransformDirection(block.transform.localScale);
+	worldScale = Vector3(Mathf.Abs(worldScale.x), Mathf.Abs(worldScale.y), Mathf.Abs(worldScale.z));
+
 	// calculate block span
-	var minX = block.transform.position.x - (block.transform.localScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxX = block.transform.position.x + (block.transform.localScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var minY = block.transform.position.y - (block.transform.localScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxY = block.transform.position.y + (block.transform.localScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var minZ = block.transform.position.z - (block.transform.localScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxZ = block.transform.position.z + (block.transform.localScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var minX = block.transform.position.x - (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxX = block.transform.position.x + (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var minY = block.transform.position.y - (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxY = block.transform.position.y + (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var minZ = block.transform.position.z - (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxZ = block.transform.position.z + (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
 
 	// update terrain boundaries
 	MIN_X = Mathf.Min(MIN_X, minX);
@@ -136,13 +140,17 @@ function IndexTerrain() {
 		// get block type from tag
 		var type = parseInt(block.tag);
 
+		// correct for rotation
+		var worldScale = block.transform.TransformDirection(block.transform.localScale);
+		worldScale = Vector3(Mathf.Abs(worldScale.x), Mathf.Abs(worldScale.y), Mathf.Abs(worldScale.z));
+
 		// calculate block span
-		var minX = block.transform.position.x - (block.transform.localScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-		var maxX = block.transform.position.x + (block.transform.localScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-		var minY = block.transform.position.y - (block.transform.localScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-		var maxY = block.transform.position.y + (block.transform.localScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-		var minZ = block.transform.position.z - (block.transform.localScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-		var maxZ = block.transform.position.z + (block.transform.localScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var minX = block.transform.position.x - (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var maxX = block.transform.position.x + (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var minY = block.transform.position.y - (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var maxY = block.transform.position.y + (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var minZ = block.transform.position.z - (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+		var maxZ = block.transform.position.z + (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
 
 		for (var x: float = minX; x <= maxX; x += Block.BLOCK_SPAN) {
 			for (var y: float = minY; y <= maxY; y += Block.BLOCK_SPAN) {

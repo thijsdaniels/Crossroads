@@ -10,40 +10,50 @@ function Update () {
 }
 
 function OnTriggerStay(other: Collider) {
-
 	var playerScript: PlayerScript = other.gameObject.GetComponent(PlayerScript);
+	var floatScript: FloatScript = other.gameObject.GetComponent(FloatScript);
 
-	if (other.gameObject.rigidbody) {
+	var offset = floatScript ? floatScript.GetOffset() : Vector3.zero;
 
-		// control drag
-		if (other.gameObject.rigidbody.drag != 2) other.gameObject.rigidbody.drag = 2;
-		if (other.gameObject.rigidbody.angularDrag != 1) other.gameObject.rigidbody.angularDrag = 1;
+	if (InsideTrigger(other.gameObject.transform.position + offset)) {
 
-		// control player state
-		if (playerScript && !playerScript.IsSwimming()) playerScript.SetSwimming(true);
+		if (other.gameObject.rigidbody) {
 
-		// control bouyancy
-		var offset: float = other.gameObject.renderer.bounds.size.y * 0.25;
-		var bouyancy: float = (playerScript && playerScript.CanDive()) ? 0 : 1;
-		
-		var depth: float = surface - (other.gameObject.transform.position.y + offset);
-		var depthFactor: float = Mathf.Min(2, depth);
-		var bouyancyFactor: float = bouyancy / other.rigidbody.mass;
+			// control drag
+			other.gameObject.rigidbody.drag = 4;
+			other.gameObject.rigidbody.angularDrag = 1;
 
-		var uplift = 1 + bouyancyFactor * depthFactor;
-		other.gameObject.rigidbody.AddForce(uplift * -Physics.gravity);
+			// control player state
+			if (playerScript && !playerScript.IsSwimming()) playerScript.SetSwimming(true);
+
+			// keep rigidbody afloat
+			var bouyancy: float = (playerScript && playerScript.IsDiving()) ? 0 : (floatScript ? floatScript.GetBuoyancy() : 1); // @todo get the actual bouyancy from somewhere
+			var depth: float = surface - (other.gameObject.transform.position.y + offset.y);
+			var depthFactor: float = Mathf.Min(2, depth);
+			var uplift = 1 + bouyancy * depthFactor;
+			other.gameObject.rigidbody.AddForce(uplift * -Physics.gravity);
+		}
+
+	} else {
+
+		if (other.gameObject.rigidbody) {
+
+			// control drag
+			other.gameObject.rigidbody.drag = 0;
+			other.gameObject.rigidbody.angularDrag = 0.05;
+
+			// control player state
+			if (playerScript) {
+				playerScript.SetSwimming(false);
+			}
+		}
 	}
 }
 
-function OnTriggerExit(other: Collider) {
+function InsideTrigger(pos: Vector3) {
 
-	if (other.gameObject.rigidbody) {
-		other.gameObject.rigidbody.drag = 0;
-		other.gameObject.rigidbody.angularDrag = 0.05;
-	}
-
-	var playerScript: PlayerScript = other.gameObject.GetComponent(PlayerScript);
-	if (playerScript) {
-		playerScript.SetSwimming(false);
-	}
+	if (pos.x < collider.bounds.min.x || pos.x >= collider.bounds.max.x) return false;
+	if (pos.y < collider.bounds.min.y || pos.y >= collider.bounds.max.y) return false;
+	if (pos.z < collider.bounds.min.z || pos.z >= collider.bounds.max.z) return false;
+	return true;
 }

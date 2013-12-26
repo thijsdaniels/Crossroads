@@ -49,7 +49,7 @@ function Explode() {
 		
 		// if the collider has a rigidbody, apply a blastforce
 		if (hit.rigidbody) {
-			hit.rigidbody.AddExplosionForce(force, this.transform.position, radius, 0.5);
+			hit.rigidbody.AddExplosionForce(force, this.transform.position, radius);
 		}
 		
 		// if the collider has health, inflict damage to it
