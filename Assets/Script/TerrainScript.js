@@ -1,10 +1,10 @@
 #pragma strict
 
-public static var BLOCKS: ArrayList;
+public static var TERRAIN_OBJECTS: ArrayList;
 public static var TERRAIN_SIZE: Vector3;
 public static var TERRAIN_OFFSET: Vector3;
-public static var TERRAIN: int[,,];
-public static var CHUNKS: GameObject[,,];
+public static var TERRAIN: Block[,,];
+public static var CHUNKS: ArrayList;
 
 private static var MIN_X: float = Mathf.Infinity;
 private static var MIN_Y: float = Mathf.Infinity;
@@ -16,6 +16,7 @@ private static var MAX_Z: float = Mathf.NegativeInfinity;
 public var generate: boolean = false;
 public var heightmap: Texture2D;
 public var chunkPrefab: GameObject;
+public var waterPrefab: GameObject;
 
 function Start () {
 	
@@ -30,6 +31,7 @@ function Start () {
 	}
 	
 	CreateChunks();
+	CreateWater();
 }
 
 function Update () {
@@ -45,7 +47,7 @@ function GenerateTerrain() {
 
 	var heightOffset = 0;
 	
-	TERRAIN = new int[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
+	TERRAIN = new Block[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
 	
 	for (var x: int = 0; x < TERRAIN_SIZE.x; x++) {
 		for (var z: int = 0; z < TERRAIN_SIZE.z; z++) {
@@ -54,13 +56,13 @@ function GenerateTerrain() {
 
 			for (var y: int = 0; y < TERRAIN_SIZE.y; y++) {
 				
-				var type = 2;
-				if (y == height - 1) type = 1;
-				if (y < height - 10) type = 3;
+				var material = BlockMaterial.DIRT;
+				if (y == height - 1) material = BlockMaterial.GRASS;
+				if (y < height - 10) material = BlockMaterial.ROCK;
 
 				if (y >= height) continue;
 				
-				TERRAIN[x, y, z] = type;
+				TERRAIN[x, y, z] = new Block(Vector3(x, y, z), material);
 			}
 		}
 	}
@@ -75,7 +77,7 @@ function PrepareTerrain() {
 	var startTime = Time.realtimeSinceStartup * 1000;
 	
 	// traverse the terrain tree
-	BLOCKS = new ArrayList();
+	TERRAIN_OBJECTS = new ArrayList();
 	TraverseTerrain(this.gameObject);
 	
 	// store terrain boundaries
@@ -83,7 +85,7 @@ function PrepareTerrain() {
 	TERRAIN_OFFSET = Vector3(MIN_X, MIN_Y, MIN_Z);
 
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
-	Debug.Log('TERRAIN: Prepared ' + BLOCKS.Count + ' Blocks in ' + startTime.ToString('f0') + ' milliseconds.');
+	Debug.Log('TERRAIN: Prepared ' + TERRAIN_OBJECTS.Count + ' Blocks in ' + startTime.ToString('f0') + ' milliseconds.');
 
 }
 
@@ -97,22 +99,22 @@ function TraverseTerrain(node: GameObject) {
 	}
 }
 
-function Visit(block: GameObject) {
+function Visit(node: GameObject) {
 
-	// @todo align block position
-	// @todo align block rotation
+	// @todo align node position
+	// @todo align node rotation
 
 	// correct for rotation
-	var worldScale = block.transform.TransformDirection(block.transform.localScale);
+	var worldScale = node.transform.TransformDirection(node.transform.localScale);
 	worldScale = Vector3(Mathf.Abs(worldScale.x), Mathf.Abs(worldScale.y), Mathf.Abs(worldScale.z));
 
-	// calculate block span
-	var minX = block.transform.position.x - (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxX = block.transform.position.x + (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var minY = block.transform.position.y - (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxY = block.transform.position.y + (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var minZ = block.transform.position.z - (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
-	var maxZ = block.transform.position.z + (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	// calculate node span
+	var minX = node.transform.position.x - (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxX = node.transform.position.x + (worldScale.x / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var minY = node.transform.position.y - (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxY = node.transform.position.y + (worldScale.y / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var minZ = node.transform.position.z - (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
+	var maxZ = node.transform.position.z + (worldScale.z / Block.BLOCK_SPAN - 1) * Block.BLOCK_SIZE;
 
 	// update terrain boundaries
 	MIN_X = Mathf.Min(MIN_X, minX);
@@ -122,8 +124,8 @@ function Visit(block: GameObject) {
 	MIN_Z = Mathf.Min(MIN_Z, minZ);
 	MAX_Z = Mathf.Max(MAX_Z, maxZ);
 	
-	// store block
-	BLOCKS.Add(block);
+	// store node
+	TERRAIN_OBJECTS.Add(node);
 }
 
 function IndexTerrain() {
@@ -131,14 +133,14 @@ function IndexTerrain() {
 	var startTime = Time.realtimeSinceStartup * 1000;
 	
 	// build terrain
-	TERRAIN = new int[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
-	for (var i: int = 0; i < BLOCKS.Count; i++) {
+	TERRAIN = new Block[TERRAIN_SIZE.x, TERRAIN_SIZE.y, TERRAIN_SIZE.z];
+	for (var i: int = 0; i < TERRAIN_OBJECTS.Count; i++) {
 	
 		// get block position
-		var block: GameObject = BLOCKS[i];
+		var block: GameObject = TERRAIN_OBJECTS[i];
 		
-		// get block type from tag
-		var type = parseInt(block.tag);
+		// get block material from tag
+		var material = parseInt(block.tag);
 
 		// correct for rotation
 		var worldScale = block.transform.TransformDirection(block.transform.localScale);
@@ -158,9 +160,9 @@ function IndexTerrain() {
 
 					var index = Position2Index(Vector3(x, y, z));
 
-					// store block type at block index
-					if (TERRAIN[index.x, index.y, index.z] != 0) Debug.LogWarning('TERRAIN: Duplicate Block found at ' + block.transform.position);
-					TERRAIN[index.x, index.y, index.z] = type;
+					// create block in terrain array
+					if (TERRAIN[index.x, index.y, index.z] != null) Debug.LogWarning('TERRAIN: Duplicate Block found at ' + block.transform.position);
+					TERRAIN[index.x, index.y, index.z] = new Block(index, material);
 				}
 			}
 		}
@@ -175,10 +177,10 @@ function UnsetTerrain() {
 
 	var startTime = Time.realtimeSinceStartup * 1000;
 
-	for (var i: int = 0; i < BLOCKS.Count; i++) {
-		Destroy(BLOCKS[i]);
+	for (var object: GameObject in TERRAIN_OBJECTS) {
+		Destroy(object);
 	}
-	BLOCKS = null;
+	TERRAIN_OBJECTS = null;
 
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
 	Debug.Log('TERRAIN: Unset terrain in ' + processingTime.ToString('f0') + ' milliseconds.');
@@ -199,33 +201,69 @@ function CreateChunks() {
 
 	var startTime = Time.realtimeSinceStartup * 1000;
 
-	// calculate the number of chunks
-	var worldSize = Vector3(Mathf.Ceil(TERRAIN_SIZE.x / ChunkScript.CHUNK_SIZE.x), Mathf.Ceil(TERRAIN_SIZE.y / ChunkScript.CHUNK_SIZE.y), Mathf.Ceil(TERRAIN_SIZE.z / ChunkScript.CHUNK_SIZE.x));
-
 	// initialize chunks
-	CHUNKS = new GameObject[worldSize.x, worldSize.y, worldSize.z];
-	for (var x = 0; x < worldSize.x; x++) {
-		for (var y = 0; y < worldSize.y; y++) {
-			for (var z = 0; z < worldSize.z; z++) {
+	CHUNKS = new ArrayList();
+	for (var x = 0; x < TERRAIN_SIZE.x; x += ChunkScript.CHUNK_SIZE.x) {
+		for (var y = 0; y < TERRAIN_SIZE.y; y += ChunkScript.CHUNK_SIZE.y) {
+			for (var z = 0; z < TERRAIN_SIZE.z; z += ChunkScript.CHUNK_SIZE.x) {
 			
 				// instantiate a chunk
-				var position = Vector3(x * ChunkScript.CHUNK_SIZE.x * Block.BLOCK_SPAN, y * ChunkScript.CHUNK_SIZE.y * Block.BLOCK_SPAN, z * ChunkScript.CHUNK_SIZE.x * Block.BLOCK_SPAN);
+				var origin: Vector3 = Vector3(x, y, z);
+				var position: Vector3 = Index2Position(origin);
 				var chunk: GameObject = Instantiate(chunkPrefab, position, Quaternion.identity);
-				CHUNKS[x, y, z] = chunk;
+				CHUNKS.Add(chunk);
 				
 				// initialize the chunk
 				var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
-				chunkScript.Initialize(x, y, z);
+				chunkScript.Initialize(origin);
+
+				// render the chunk
+				chunkScript.Render();
 			}
 		}
 	}
 
-	// this is called here because all chunks must be initialized before rendering, so that occupation in adjacent chunks can be checked
-	RenderChunks();
-
-	var numChunks = worldSize.x * worldSize.y * worldSize.z;
 	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
-	Debug.Log('TERRAIN: Built ' + numChunks + ' Chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
+	Debug.Log('TERRAIN: Built ' + CHUNKS.Count + ' Chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
+}
+
+public function CreateWater() {
+
+	var startTime = Time.realtimeSinceStartup * 1000;
+	var columnCount: int = 0;
+
+	for (var x = 0; x < TERRAIN_SIZE.x; x++) {
+		for (var z = 0; z < TERRAIN_SIZE.z; z++) {
+
+			var columnArray = new Array();
+
+			for (var y = 0; y < TERRAIN_SIZE.y; y++) {
+
+				var block: Block = TERRAIN[x, y, z];
+
+				if (block == null || !block.material.IsWater()) {
+
+					if (columnArray.length > 0) {
+
+						var scale: Vector3 = Vector3(Block.BLOCK_SPAN, columnArray.length * Block.BLOCK_SPAN, Block.BLOCK_SPAN);
+						var index: Vector3 = Vector3(x, y - columnArray.length / 2f - Block.BLOCK_SPAN, z);
+						var position: Vector3 = Index2Position(index);
+
+						var column = Instantiate(waterPrefab, position, Quaternion.identity);
+						column.transform.localScale = scale;
+
+						columnArray.Clear();
+						columnCount++;
+					}
+				}
+				
+				else if (block.material.IsWater()) columnArray.Push(block);
+			}
+		}
+	}
+
+	var processingTime = Time.realtimeSinceStartup * 1000 - startTime;
+	Debug.Log('TERRAIN: Built ' + columnCount + ' Water Columns in ' + processingTime.ToString('f0') + ' milliseconds.');
 }
 
 public static function Slice(axis: int, position: float, direction: int) {
@@ -239,20 +277,24 @@ public static function Slice(axis: int, position: float, direction: int) {
 		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
 		var chunkPosition = chunkScript.GetSlicePosition(axis, position, direction);
 
-		// if the chunk is intersected by the track, slice it
-		if (chunkPosition == ChunkScript.INTERSECT) {
-			chunkScript.Slice(axis, position, direction);
-			chunksSliced++;
-		}
+		// determine what to do with the chunk based on its position
+		switch (chunkPosition) {
 
-		// else, if the chunk is ahead of the track, hide it
-		else if (chunkPosition == ChunkScript.AHEAD) {
-			chunkScript.Hide();
-		}
-		
-		// else, if the chunk is behind the track, show it
-		else if (chunkPosition == ChunkScript.BEHIND) {
-			chunkScript.ShowAll();
+			// if the chunk is intersected by the track, slice it
+			case ChunkScript.INTERSECT:
+				chunkScript.Slice(axis, position, direction);
+				chunksSliced++;
+				break;
+
+			// if the chunk is ahead of the track, hide it
+			case ChunkScript.AHEAD:
+				chunkScript.Hide();
+				break;
+
+			// if the chunk is behind the track, show it
+			case ChunkScript.BEHIND:
+				chunkScript.ShowAll();
+				break;
 		}
 	}
 
@@ -260,9 +302,45 @@ public static function Slice(axis: int, position: float, direction: int) {
 	Debug.Log('TERRAIN: Sliced ' + chunksSliced + ' chunks in ' + processingTime.ToString('f0') + ' milliseconds.');
 }
 
-public static function RenderChunks() {
-	for (var chunk: GameObject in CHUNKS) {
-		var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
-		chunkScript.Render();
-	}
+public static function InRange(index: Vector3): boolean {
+	if (index.x < 0 || index.x >= TERRAIN_SIZE.x) return false;
+	if (index.y < 0 || index.y >= TERRAIN_SIZE.y) return false;
+	if (index.z < 0 || index.z >= TERRAIN_SIZE.z) return false;
+	return true;
+}
+
+public static function IsOccupied(index: Vector3): boolean {
+	
+	if (!InRange(index)) return false;
+	
+	var block: Block = TERRAIN[index.x, index.y, index.z];
+	if (block == null) return false;
+	
+	return true;
+}
+
+public static function IsOpaque(index: Vector3): boolean {
+
+	if (!IsOccupied(index)) return false;
+
+	var block: Block = TERRAIN[index.x, index.y, index.z];
+	return block.material.IsOpaque();
+}
+
+public static function SameMaterial(index1: Vector3, index2: Vector3): boolean {
+
+	if (!IsOccupied(index1) || !IsOccupied(index2)) return false;
+
+	var block1: Block = TERRAIN[index1.x, index1.y, index1.z];
+	var block2: Block = TERRAIN[index2.x, index2.y, index2.z];
+	
+	return (block1.material.id == block2.material.id);
+}
+
+public static function IsActive(index: Vector3): boolean {
+
+	if (!IsOccupied(index)) return false;
+
+	var block: Block = TERRAIN[index.x, index.y, index.z];
+	return block.IsActive();
 }

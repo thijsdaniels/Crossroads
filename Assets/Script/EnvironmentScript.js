@@ -36,10 +36,6 @@ private static function Hide(object: GameObject) {
 	for (var child: Transform in object.transform) {
 		Hide(child.gameObject);
 	}
-
-	//if (object.layer == LAYER_ENVIRONMENT) {
-		//object.layer = LAYER_ENVIRONMENT_HIDDEN;
-	//}
 }
 
 private static function Show(object: GameObject) {
@@ -53,10 +49,6 @@ private static function Show(object: GameObject) {
 	for (var child: Transform in object.transform) {
 		Show(child.gameObject);
 	}
-
-	//if (object.layer == LAYER_ENVIRONMENT_HIDDEN) {
-		//object.layer = LAYER_ENVIRONMENT;
-	//}
 }
 
 public static function Slice(axis: int, position: float, direction: int) {
@@ -71,7 +63,7 @@ public static function Slice(axis: int, position: float, direction: int) {
 	// first slice the terrain
 	TerrainScript.Slice(axis, position, direction);
 
-	// then slice the environment
+	// then slice the rest of the environment
 	var environment: GameObject[] = FindGameObjectsInLayer(LAYER_ENVIRONMENT);
 	if (environment == null) return;
 	

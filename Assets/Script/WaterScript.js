@@ -10,6 +10,7 @@ function Update () {
 }
 
 function OnTriggerStay(other: Collider) {
+	
 	var playerScript: PlayerScript = other.gameObject.GetComponent(PlayerScript);
 	var floatScript: FloatScript = other.gameObject.GetComponent(FloatScript);
 
