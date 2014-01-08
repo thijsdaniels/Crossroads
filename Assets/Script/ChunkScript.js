@@ -1,7 +1,7 @@
 #pragma strict
 
 // constants
-public static var CHUNK_SIZE: Vector2 = Vector2(16, 32);
+public static var CHUNK_SIZE: Vector3 = Vector3(16, 32, 16);
 public static var AHEAD: int = -1;
 public static var INTERSECT: int = 0;
 public static var BEHIND: int = 1;
@@ -46,8 +46,196 @@ public function Initialize(_origin: Vector3) {
 			}
 		}
 	}
+
+	// render the chunk
+	Render();
+
+	// add a water collider mesh to the chunk
+	Flood();
 }
 
+
+public function Flood() {
+
+	if (IsEmpty()) return;
+
+	var nonWater:int = 0;
+
+	// initialize containers for water mesh
+	var waterVertices = new Array();
+	var waterTriangles = new Array();
+
+	// initialize containers for surface mesh
+	var surfaceVertices = new Array();
+	var surfaceTriangles = new Array();
+
+	for (var block: Block in blocks) {
+
+		if (!block.material.IsWater()) {
+			nonWater++;
+			continue;
+		}
+
+		var localPosition = block.position;// - transform.position;
+		var waterVertexIndex: int = 0;
+		var surfaceVertexIndex: int = 0;
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.up)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+
+			surfaceVertexIndex = surfaceVertices.length;
+
+			surfaceVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			surfaceVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			surfaceVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			surfaceVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+
+			surfaceTriangles.Add(surfaceVertexIndex);
+			surfaceTriangles.Add(surfaceVertexIndex + 3);
+			surfaceTriangles.Add(surfaceVertexIndex + 2);
+
+			surfaceTriangles.Add(surfaceVertexIndex + 2);
+			surfaceTriangles.Add(surfaceVertexIndex + 1);
+			surfaceTriangles.Add(surfaceVertexIndex);
+		}
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.back)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+		}
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.left)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+		}
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.forward)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+		}
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.right)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y + Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+		}
+
+		if (ShouldGenerateWaterFace(block.index, Vector3.down)) {
+
+			waterVertexIndex = waterVertices.length;
+
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x - Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z - Block.BLOCK_SIZE));
+			waterVertices.Add(Vector3(localPosition.x + Block.BLOCK_SIZE, localPosition.y - Block.BLOCK_SIZE, localPosition.z + Block.BLOCK_SIZE));
+
+			waterTriangles.Add(waterVertexIndex);
+			waterTriangles.Add(waterVertexIndex + 1);
+			waterTriangles.Add(waterVertexIndex + 2);
+
+			waterTriangles.Add(waterVertexIndex + 2);
+			waterTriangles.Add(waterVertexIndex + 3);
+			waterTriangles.Add(waterVertexIndex);
+		}
+	}
+
+	if (nonWater == blocks.Count) return;
+
+	// create water and surface child objects
+	var water: GameObject = new GameObject('Water');
+	water.transform.parent = transform;
+	var waterCollider = water.AddComponent(MeshCollider);
+	waterCollider.convex = true;
+	waterCollider.isTrigger = true;
+	water.AddComponent(WaterScript);
+
+	var surface: GameObject = new GameObject('Surface');
+	surface.transform.parent = water.transform;
+	var surfaceCollider = surface.AddComponent(MeshCollider);
+	surfaceCollider.isTrigger = true;
+	surface.layer = WaterScript.SURFACE_LAYER;
+
+	// build filter mesh
+	var waterMesh: Mesh = new Mesh();
+	waterMesh.vertices = waterVertices;
+	waterMesh.triangles = waterTriangles;
+	waterCollider.mesh = waterMesh;
+
+	// build collider mesh
+	var surfaceMesh: Mesh = new Mesh();
+	surfaceMesh.vertices = surfaceVertices;
+	surfaceMesh.triangles = surfaceTriangles;
+	surfaceCollider.mesh = surfaceMesh;
+}
+
+function ShouldGenerateWaterFace(index: Vector3, direction: Vector3): boolean {
+	return !TerrainScript.IsWater(index + direction);
+}
 
 //////////////////////////////
 ///////// RENDERING //////////

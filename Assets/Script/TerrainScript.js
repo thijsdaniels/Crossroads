@@ -31,7 +31,6 @@ function Start () {
 	}
 	
 	CreateChunks();
-	CreateWater();
 }
 
 function Update () {
@@ -216,9 +215,6 @@ function CreateChunks() {
 				// initialize the chunk
 				var chunkScript: ChunkScript = chunk.GetComponent(ChunkScript);
 				chunkScript.Initialize(origin);
-
-				// render the chunk
-				chunkScript.Render();
 			}
 		}
 	}
@@ -343,4 +339,12 @@ public static function IsActive(index: Vector3): boolean {
 
 	var block: Block = TERRAIN[index.x, index.y, index.z];
 	return block.IsActive();
+}
+
+public static function IsWater(index: Vector3): boolean {
+
+	if (!IsOccupied(index)) return false;
+
+	var block: Block = TERRAIN[index.x, index.y, index.z];
+	return block.material.IsWater();
 }
